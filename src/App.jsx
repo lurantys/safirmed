@@ -16,7 +16,8 @@ import {
   ArrowRight,
   ArrowUpRight,
   ShieldCheck,
-  Heart
+  Heart,
+  Menu
 } from "lucide-react";
 
 export default function SafirMedLanding() {
@@ -56,8 +57,11 @@ export default function SafirMedLanding() {
             <Button variant="ghost" className={`hidden sm:flex rounded-full font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all ${isScrolled ? 'h-10 px-4 text-sm' : 'h-11 px-5 text-base'}`}>
               Patients
             </Button>
-            <Button className={`rounded-full bg-[#18181A] hover:bg-black text-white shadow-sm transition-all focus:ring-slate-900 flex items-center gap-2 border border-transparent hover:scale-105 active:scale-95 ${isScrolled ? 'h-10 px-5 text-sm' : 'h-11 px-6 text-base'}`}>
+            <Button className={`hidden sm:flex rounded-full bg-[#18181A] hover:bg-black text-white shadow-sm transition-all focus:ring-slate-900 items-center gap-2 border border-transparent hover:scale-105 active:scale-95 ${isScrolled ? 'h-10 px-5 text-sm' : 'h-11 px-6 text-base'}`}>
               Docteurs / Soignants <ArrowUpRight className={isScrolled ? 'h-4 w-4' : 'h-4 w-4 text-white/80'} />
+            </Button>
+            <Button variant="ghost" size="icon" className="sm:hidden -mr-2 hover:bg-slate-100/50">
+              <Menu className="h-6 w-6 text-slate-700" />
             </Button>
           </div>
         </nav>
