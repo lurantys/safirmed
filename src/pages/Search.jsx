@@ -67,7 +67,7 @@ export default function SearchPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
       {/* Floating Navbar */}
       <div className={`fixed top-0 w-full z-50 transition-all duration-500 ease-in-out ${isScrolled ? 'pt-6 px-4' : 'pt-0 px-0'}`}>
         <nav
@@ -102,7 +102,7 @@ export default function SearchPage() {
         </nav>
       </div>
 
-      <main className="max-w-5xl mx-auto px-6 pt-16">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-6 pt-16">
         {/* SEARCH BAR SECTION */}
         <section className="pt-24 pb-8 flex flex-col items-center text-center">
           <div className="w-full max-w-4xl mx-auto mb-2">
@@ -243,7 +243,7 @@ export default function SearchPage() {
       </main>
 
       {/* FOOTER */}
-      <footer className="bg-white border-t border-slate-100 mt-20 pt-16 pb-8">
+      <footer className="bg-white border-t border-slate-100 mt-auto pt-16 pb-8 shrink-0 w-full">
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>

@@ -161,7 +161,7 @@ export default function Landing() {
       </main>
 
       {/* FOOTER */}
-      <footer className="bg-white border-t border-slate-100 mt-20 pt-16 pb-8">
+      <footer className="bg-white border-t border-slate-100 mt-auto pt-16 pb-8 relative z-10 shrink-0 w-full">
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
