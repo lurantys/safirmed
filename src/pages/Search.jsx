@@ -37,9 +37,11 @@ export default function SearchPage() {
         const workbook = XLSX.read(arrayBuffer, { type: 'array' });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-        const json = XLSX.utils.sheet_to_json(worksheet);
 
-        // Ensure every doctor has an ID based on row index since real excel lacks it
+        // Use range: 1 to skip the leading empty row and treat row 2 as headers
+        const json = XLSX.utils.sheet_to_json(worksheet, { range: 1 });
+
+        // Ensure every doctor has an ID based on row index
         const doctorsWithIds = json.map((doc, idx) => ({ ...doc, ID: (idx + 1).toString() }));
         setDoctors(doctorsWithIds);
       } catch (error) {
