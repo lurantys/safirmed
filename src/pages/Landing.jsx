@@ -34,7 +34,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
       {/* Floating Navbar */}
       <div className={`fixed top-0 w-full z-50 transition-all duration-500 ease-in-out ${isScrolled ? 'pt-6 px-4' : 'pt-0 px-0'}`}>
         <nav
@@ -69,7 +69,7 @@ export default function Landing() {
         </nav>
       </div>
 
-      <main className="max-w-5xl mx-auto px-6 pt-16">
+      <main className="flex-1 max-w-5xl mx-auto px-6 pt-16">
         {/* HERO SECTION */}
         <section className="py-20 md:py-32 flex flex-col items-center text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-sm font-medium mb-8 border border-emerald-100 shadow-sm cursor-default hover:bg-emerald-100 transition-colors">

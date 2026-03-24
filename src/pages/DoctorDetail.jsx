@@ -43,7 +43,7 @@ export default function DoctorDetail() {
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-24">
+        <div className="min-h-screen flex flex-col bg-slate-50 pb-0">
             {/* Dynamic Header */}
             <div className="bg-white border-b border-slate-100 px-6 py-6 sticky top-0 z-40 shadow-sm/50">
                 <div className="max-w-4xl mx-auto flex items-center cursor-pointer group w-fit" onClick={() => navigate(-1)}>
@@ -54,7 +54,7 @@ export default function DoctorDetail() {
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto px-6 pt-12">
+            <div className="flex-1 max-w-4xl mx-auto px-6 pt-12">
                 {/* Main Info Card */}
                 <div className="bg-white rounded-[2rem] p-5 sm:p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col sm:flex-row gap-6 sm:gap-10 items-center sm:items-start relative overflow-hidden text-center sm:text-left">
                     <div className="absolute top-0 right-0 w-80 h-80 bg-blue-50 rounded-full blur-3xl opacity-60 -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
@@ -158,6 +158,28 @@ export default function DoctorDetail() {
                     </div>
                 </div>
             </div>
+
+            {/* FOOTER */}
+            <footer className="bg-white border-t border-slate-100 mt-auto pt-16 pb-8 relative z-10 shrink-0 w-full">
+                <div className="max-w-5xl mx-auto px-6">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
+                            <Heart className="h-6 w-6 text-blue-600 fill-blue-600" />
+                            <span className="font-bold text-2xl tracking-tight text-slate-900">Safir<span className="text-blue-600">Med</span></span>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-8 text-sm font-medium text-slate-500">
+                            <a href="#" className="hover:text-blue-600 transition-colors">À propos</a>
+                            <a href="#" className="hover:text-blue-600 transition-colors">Médecins</a>
+                            <a href="#" className="hover:text-blue-600 transition-colors">Contact</a>
+                        </div>
+
+                        <div className="text-sm font-semibold text-slate-600 bg-slate-100/80 px-4 py-2 rounded-lg border border-slate-200">
+                            Paiement sur place uniquement
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 }
