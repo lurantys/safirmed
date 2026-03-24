@@ -146,22 +146,15 @@ export default function DoctorDetail() {
                         <MapPin className="h-6 w-6 text-slate-400" /> Emplacement du cabinet
                     </h2>
                     <div className="w-full bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 h-[400px] shadow-inner relative z-10">
-                        {doctor.MapEmbed ? (
-                            <iframe
-                                src={doctor.MapEmbed}
-                                width="100%"
-                                height="100%"
-                                style={{ border: 0 }}
-                                allowFullScreen=""
-                                loading="lazy"
-                                referrerPolicy="no-referrer-when-downgrade"
-                            ></iframe>
-                        ) : (
-                            <div className="w-full h-full flex flex-col gap-4 items-center justify-center text-slate-400">
-                                <MapPin className="h-10 w-10 opacity-20" />
-                                <span className="font-medium">Carte non disponible pour ce médecin</span>
-                            </div>
-                        )}
+                        <iframe
+                            src={doctor.MapEmbed || "https://maps.google.com/maps?q=El%20Jadida&t=&z=13&ie=UTF8&iwloc=&output=embed"}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            allowFullScreen=""
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                        ></iframe>
                     </div>
                 </div>
             </div>
