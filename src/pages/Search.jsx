@@ -23,9 +23,18 @@ export default function SearchPage() {
   const [doctors, setDoctors] = useState([]);
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [selectedCity, setSelectedCity] = useState(searchParams.get("city") || "El Jadida");
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     setSearchParams({ q: searchQuery, city: selectedCity }, { replace: true });
+
+    // Trigger 1s loading effect after every search change
+    setIsSearching(true);
+    const timer = setTimeout(() => {
+      setIsSearching(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [searchQuery, selectedCity, setSearchParams]);
 
   useEffect(() => {
@@ -188,11 +197,24 @@ export default function SearchPage() {
               {searchQuery ? `Résultats pour "${searchQuery}"` : "Médecins recommandés"}
             </h2>
             <span className="text-slate-500 font-medium bg-slate-100 px-4 py-1.5 rounded-full text-sm">
-              {filteredDoctors.length} {filteredDoctors.length > 1 ? 'résultats correspondants' : 'résultat correspondant'}
+              {isSearching ? "Recherche..." : `${filteredDoctors.length} ${filteredDoctors.length > 1 ? 'résultats correspondants' : 'résultat correspondant'}`}
             </span>
           </div>
 
-          {filteredDoctors.length > 0 ? (
+          {isSearching ? (
+            <div className="grid md:grid-cols-2 gap-6 animate-pulse">
+              {[1, 2, 4, 6].map((i) => (
+                <div key={i} className="bg-white p-6 rounded-[1.5rem] border border-slate-100 h-40 flex items-center gap-6">
+                  <div className="h-16 w-16 bg-slate-100 rounded-full shrink-0"></div>
+                  <div className="flex-1 space-y-3">
+                    <div className="h-4 bg-slate-100 rounded-full w-3/4"></div>
+                    <div className="h-3 bg-slate-100 rounded-full w-1/2"></div>
+                    <div className="h-3 bg-slate-100 rounded-full w-1/4"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredDoctors.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-6">
               {filteredDoctors.map((doc, idx) => (
                 <div key={idx} className="bg-white p-6 rounded-[1.5rem] shadow-sm shadow-slate-200/50 border border-slate-100 hover:shadow-lg hover:shadow-blue-200/20 hover:border-blue-100 transition-all group flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left">
