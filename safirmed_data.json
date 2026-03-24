@@ -1,0 +1,20 @@
+[
+  {
+    "Spécialité": "ORL",
+    "Nom": "Dr. Nadia Naim",
+    "Téléphone": "06 45 48 32 80",
+    "Ville": "El Jadida"
+  },
+  {
+    "Spécialité": "ORL",
+    "Nom": "Dr. Kaoutar Chaker",
+    "Téléphone": "05 23 35 24 96",
+    "Ville": "El Jadida"
+  },
+  {
+    "Spécialité": "ORL",
+    "Nom": "Dr. Bourchich Mustapha",
+    "Téléphone": "05 23 37 55 02",
+    "Ville": "El Jadida"
+  }
+]
