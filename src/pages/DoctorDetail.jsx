@@ -56,7 +56,7 @@ export default function DoctorDetail() {
 
             <div className="max-w-4xl mx-auto px-6 pt-12">
                 {/* Main Info Card */}
-                <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col sm:flex-row gap-8 sm:gap-10 items-center sm:items-start relative overflow-hidden text-center sm:text-left">
+                <div className="bg-white rounded-[2rem] p-5 sm:p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col sm:flex-row gap-6 sm:gap-10 items-center sm:items-start relative overflow-hidden text-center sm:text-left">
                     <div className="absolute top-0 right-0 w-80 h-80 bg-blue-50 rounded-full blur-3xl opacity-60 -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
 
                     <div className="h-32 w-32 md:h-40 md:w-40 bg-blue-600 text-white rounded-[2rem] flex items-center justify-center font-bold text-6xl shrink-0 shadow-xl shadow-blue-200/50 z-10 mx-auto sm:mx-0">
@@ -67,20 +67,20 @@ export default function DoctorDetail() {
                         <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3">{doctor.Nom}</h1>
                         <p className="text-blue-600 font-semibold text-base sm:text-lg md:text-xl mb-6 sm:mb-8 bg-blue-50 w-fit px-4 py-1.5 rounded-full border border-blue-100 shadow-sm mx-auto sm:mx-0">{doctor.Spécialité}</p>
 
-                        <div className="grid sm:grid-cols-2 gap-y-5 gap-x-8 text-slate-600 font-medium bg-slate-50 p-6 rounded-[1.5rem] border border-slate-200/60">
-                            <div className="flex items-center gap-3">
+                        <div className="grid sm:grid-cols-2 gap-y-4 sm:gap-y-5 gap-x-4 sm:gap-x-8 text-slate-600 font-medium text-sm sm:text-base bg-slate-50 p-4 sm:p-6 rounded-[1.5rem] border border-slate-200/60 w-full">
+                            <div className="flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start gap-2 sm:gap-3 text-center sm:text-left">
                                 <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 border border-slate-100">
                                     <Phone className="h-4 w-4 text-blue-600" />
                                 </div>
                                 <span>{doctor.Téléphone || "Non spécifié"}</span>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start gap-2 sm:gap-3 text-center sm:text-left">
                                 <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 border border-slate-100">
                                     <MapPin className="h-4 w-4 text-blue-600" />
                                 </div>
                                 <span>{doctor.Adresse ? `${doctor.Adresse}, ` : ""}{doctor.Ville}</span>
                             </div>
-                            <div className="flex items-start gap-3 sm:col-span-2 mt-2">
+                            <div className="flex flex-col sm:flex-row items-center sm:items-start justify-center sm:justify-start gap-2 sm:gap-3 sm:col-span-2 mt-2 text-center sm:text-left">
                                 <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 border border-slate-100 mt-1">
                                     <Clock className="h-4 w-4 text-emerald-600" />
                                 </div>

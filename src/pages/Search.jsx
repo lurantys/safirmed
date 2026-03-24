@@ -207,17 +207,17 @@ export default function SearchPage() {
                     <p className="text-blue-600 font-medium text-sm mb-3 bg-blue-50 w-fit px-2 py-0.5 rounded-full">{doc.Spécialité}</p>
 
                     <div className="space-y-2 text-sm text-slate-500 font-medium">
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center justify-center sm:justify-start gap-2.5">
                         <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
                         <span className="truncate">{doc.Adresse ? `${doc.Adresse}, ` : ""}{doc.Ville}</span>
                       </div>
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center justify-center sm:justify-start gap-2.5">
                         <Phone className="h-4 w-4 shrink-0 text-slate-400" />
                         <span>{doc.Téléphone}</span>
                       </div>
                     </div>
                   </div>
-                  <Button onClick={() => navigate(`/doctor/${doc.ID}`)} className="w-full sm:w-auto rounded-full bg-slate-900 hover:bg-blue-600 text-white font-semibold transition-all shadow-md shrink-0 focus:ring-4 focus:ring-blue-100 hover:scale-105 active:scale-95">
+                  <Button onClick={() => navigate(`/doctor/${doc.ID}`)} className="w-full sm:w-auto rounded-2xl sm:rounded-full bg-slate-900 hover:bg-blue-600 text-white font-semibold transition-all shadow-md shrink-0 focus:ring-4 focus:ring-blue-100 hover:scale-105 active:scale-95 whitespace-normal h-auto py-3 min-h-[48px]">
                     Prendre RDV
                   </Button>
                 </div>
