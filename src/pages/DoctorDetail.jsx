@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, MapPin, Phone, CalendarCheck } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, Phone, CalendarCheck, Heart } from "lucide-react";
 import * as XLSX from 'xlsx';
 
 export default function DoctorDetail() {
