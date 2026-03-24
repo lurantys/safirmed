@@ -193,11 +193,11 @@ export default function SearchPage() {
           {filteredDoctors.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-6">
               {filteredDoctors.map((doc, idx) => (
-                <div key={idx} className="bg-white p-6 rounded-[1.5rem] shadow-sm shadow-slate-200/50 border border-slate-100 hover:shadow-lg hover:shadow-blue-200/20 hover:border-blue-100 transition-all group flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                  <div className="h-16 w-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl shrink-0 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                <div key={idx} className="bg-white p-6 rounded-[1.5rem] shadow-sm shadow-slate-200/50 border border-slate-100 hover:shadow-lg hover:shadow-blue-200/20 hover:border-blue-100 transition-all group flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left">
+                  <div className="h-20 w-20 sm:h-16 sm:w-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold text-2xl sm:text-xl shrink-0 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
                     {doc.Nom ? String(doc.Nom).replace("Dr. ", "").charAt(0) : "D"}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 flex flex-col items-center sm:items-start w-full">
                     <h3
                       onClick={() => navigate(`/doctor/${doc.ID}`)}
                       className="font-bold text-lg text-slate-900 mb-1 tracking-tight transition-colors cursor-pointer hover:text-blue-600 hover:underline decoration-blue-200 underline-offset-4"

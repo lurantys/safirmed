@@ -56,16 +56,16 @@ export default function DoctorDetail() {
 
             <div className="max-w-4xl mx-auto px-6 pt-12">
                 {/* Main Info Card */}
-                <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col md:flex-row gap-10 items-start relative overflow-hidden">
+                <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col sm:flex-row gap-8 sm:gap-10 items-center sm:items-start relative overflow-hidden text-center sm:text-left">
                     <div className="absolute top-0 right-0 w-80 h-80 bg-blue-50 rounded-full blur-3xl opacity-60 -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
 
-                    <div className="h-32 w-32 md:h-40 md:w-40 bg-blue-600 text-white rounded-[2rem] flex items-center justify-center font-bold text-6xl shrink-0 shadow-xl shadow-blue-200/50">
+                    <div className="h-32 w-32 md:h-40 md:w-40 bg-blue-600 text-white rounded-[2rem] flex items-center justify-center font-bold text-6xl shrink-0 shadow-xl shadow-blue-200/50 z-10 mx-auto sm:mx-0">
                         {doctor.Nom ? String(doctor.Nom).replace("Dr. ", "").charAt(0) : "D"}
                     </div>
 
-                    <div className="flex-1 w-full z-10">
-                        <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3">{doctor.Nom}</h1>
-                        <p className="text-blue-600 font-semibold text-lg md:text-xl mb-8 bg-blue-50 w-fit px-4 py-1.5 rounded-full border border-blue-100 shadow-sm">{doctor.Spécialité}</p>
+                    <div className="flex-1 w-full z-10 flex flex-col items-center sm:items-start">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3">{doctor.Nom}</h1>
+                        <p className="text-blue-600 font-semibold text-base sm:text-lg md:text-xl mb-6 sm:mb-8 bg-blue-50 w-fit px-4 py-1.5 rounded-full border border-blue-100 shadow-sm mx-auto sm:mx-0">{doctor.Spécialité}</p>
 
                         <div className="grid sm:grid-cols-2 gap-y-5 gap-x-8 text-slate-600 font-medium bg-slate-50 p-6 rounded-[1.5rem] border border-slate-200/60">
                             <div className="flex items-center gap-3">
@@ -91,8 +91,8 @@ export default function DoctorDetail() {
                             </div>
                         </div>
 
-                        <div className="mt-10 flex gap-4">
-                            <Button size="lg" className="rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-200/50 gap-2 h-14 px-8 md:text-lg">
+                        <div className="mt-10 flex justify-center sm:justify-start gap-4 w-full">
+                            <Button size="lg" className="rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-200/50 gap-2 h-14 px-6 sm:px-8 text-base md:text-lg w-full sm:w-auto">
                                 <CalendarCheck className="h-5 w-5" /> Prendre Rendez-vous par téléphone
                             </Button>
                         </div>
