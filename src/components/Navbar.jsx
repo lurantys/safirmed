@@ -18,10 +18,7 @@ export default function Navbar({ isScrolled = false }) {
           className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
           onClick={() => navigate('/')}
         >
-          <Heart className={`text-blue-600 transition-all ${isScrolled ? 'h-6 w-6' : 'h-8 w-8'} fill-blue-600`} />
-          <span className={`font-bold tracking-tight text-slate-900 transition-all ${isScrolled ? 'text-lg' : 'text-2xl'}`}>
-            Safir<span className="text-blue-600">Med</span>
-          </span>
+          <img src="/logo.png" alt="SafirMed Logo" className={`transition-all ${isScrolled ? 'h-8' : 'h-10'} object-contain`} />
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
