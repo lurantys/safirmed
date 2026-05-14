@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, MapPin, Phone, CalendarCheck, Heart } from "lucide-react";
-import { DEFAULT_CITY } from "@/constants";
+import { ArrowLeft, Clock, MapPin, Phone, CalendarCheck } from "lucide-react";
 import { convertToEmbedUrl } from "@/lib/mapsConverter";
 import * as XLSX from 'xlsx';
 
@@ -19,12 +18,11 @@ export default function DoctorDetail() {
                 const arrayBuffer = await response.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                
-                // Find header row
+
                 let headerRow = 0;
                 let headers = {};
                 const range = XLSX.utils.decode_range(worksheet['!ref']);
-                
+
                 for (let R = 0; R <= Math.min(5, range.e.r); R++) {
                   const rowHeaders = {};
                   for (let C = 0; C <= range.e.c; C++) {
@@ -40,37 +38,35 @@ export default function DoctorDetail() {
                   }
                 }
 
-                // Fetch scraped hours if available
                 let hoursJson = {};
                 try {
                     const hoursRes = await fetch('/hours.json');
                     hoursJson = await hoursRes.json();
                 } catch(e) {}
 
-                // Find matching cabinet
                 let found = null;
                 let currentId = 0;
                 for (let R = headerRow + 1; R <= range.e.r; R++) {
                   const nameCell = worksheet[XLSX.utils.encode_cell({ c: headers['Nom du Cabinet / Médecin'] ?? 1, r: R })];
                   if (!nameCell?.v) continue;
-                  
+
                   currentId++;
                   if (String(currentId) === String(id)) {
                     const specCell = worksheet[XLSX.utils.encode_cell({ c: headers['Spécialité'] ?? 0, r: R })];
                     const phoneCell = worksheet[XLSX.utils.encode_cell({ c: headers['Téléphone'] ?? 2, r: R })];
                     const addrCell = worksheet[XLSX.utils.encode_cell({ c: headers['Adresse'] ?? 3, r: R })];
                     const linkCell = worksheet[XLSX.utils.encode_cell({ c: headers['Lien Google Maps'] ?? 4, r: R })];
-                    
+
                     const nameVal = nameCell?.v ? String(nameCell.v).trim() : '';
                     const addrVal = addrCell?.v ? String(addrCell.v).trim() : '';
                     const mapsUrl = (linkCell?.l?.Target || linkCell?.v || '').toString().trim();
                     const embedUrl = convertToEmbedUrl(mapsUrl, nameVal, addrVal);
-                    
+
                     const scrapedHours = hoursJson[currentId];
-                    const formattedHours = (scrapedHours && scrapedHours !== 'Non spécifié' && scrapedHours !== 'Erreur') 
-                        ? scrapedHours.split(';').map(s => s.trim()).join('\\n') 
+                    const formattedHours = (scrapedHours && scrapedHours !== 'Non spécifié' && scrapedHours !== 'Erreur')
+                        ? scrapedHours.split(';').map(s => s.trim()).join('\\n')
                         : 'Horaires non spécifiés';
-                    
+
                     found = {
                       ID: String(id),
                       Nom: nameVal,
@@ -96,10 +92,14 @@ export default function DoctorDetail() {
         fetchDoctor();
     }, [id]);
 
-    if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-medium text-slate-500">Chargement...</div>;
+    if (loading) return (
+      <div className="flex items-center justify-center min-h-[60vh] font-medium text-slate-500">
+        Chargement...
+      </div>
+    );
 
     if (!doctor) return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
             <h1 className="text-3xl font-bold text-slate-900 mb-4">Médecin introuvable</h1>
             <p className="text-slate-500 mb-8 max-w-sm">Le profil de ce médecin n'existe pas ou a été retiré de l'annuaire.</p>
             <Button onClick={() => navigate('/search')} className="rounded-full px-8">Retour à la recherche</Button>
@@ -107,9 +107,8 @@ export default function DoctorDetail() {
     );
 
     return (
-        <div className="min-h-screen flex flex-col bg-slate-50 pb-0">
-            {/* Dynamic Header */}
-            <div className="bg-white border-b border-slate-100 px-6 py-6 sticky top-0 z-40 shadow-sm/50">
+        <>
+            <div className="bg-white border-b border-slate-100 px-6 py-6 sticky top-0 z-40 shadow-sm/50 -mx-6">
                 <div className="max-w-4xl mx-auto flex items-center cursor-pointer group w-fit" onClick={() => navigate(-1)}>
                     <div className="h-10 w-10 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-slate-100 transition-colors mr-4">
                         <ArrowLeft className="h-5 w-5 text-slate-600" />
@@ -118,8 +117,7 @@ export default function DoctorDetail() {
                 </div>
             </div>
 
-            <div className="flex-1 max-w-4xl mx-auto px-6 pt-12">
-                {/* Main Info Card */}
+            <div className="max-w-4xl mx-auto pt-12">
                 <div className="bg-white rounded-[2rem] p-5 sm:p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col sm:flex-row gap-6 sm:gap-10 items-center sm:items-start relative overflow-hidden text-center sm:text-left">
                     <div className="absolute top-0 right-0 w-80 h-80 bg-blue-50 rounded-full blur-3xl opacity-60 -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
 
@@ -202,8 +200,7 @@ export default function DoctorDetail() {
                     </div>
                 </div>
 
-                {/* Map Section */}
-                <div className="mt-8 bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
+                <div className="mt-8 mb-12 bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl opacity-50 translate-y-1/2 -translate-x-1/4 pointer-events-none"></div>
 
                     <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
@@ -222,27 +219,6 @@ export default function DoctorDetail() {
                     </div>
                 </div>
             </div>
-
-            {/* FOOTER */}
-            <footer className="bg-white border-t border-slate-100 mt-auto pt-16 pb-8 relative z-10 shrink-0 w-full">
-                <div className="max-w-5xl mx-auto px-6">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
-                            <img src="/logo.png" alt="SafirMed Logo" className="h-20 object-contain" />
-                        </div>
-
-                        <div className="flex flex-wrap justify-center gap-8 text-sm font-medium text-slate-500">
-                            <a href="#" className="hover:text-blue-600 transition-colors">À propos</a>
-                            <a href="#" className="hover:text-blue-600 transition-colors">Médecins</a>
-                            <a href="#" className="hover:text-blue-600 transition-colors">Contact</a>
-                        </div>
-
-                        <div className="text-sm font-semibold text-slate-600 bg-slate-100/80 px-4 py-2 rounded-lg border border-slate-200">
-                            Paiement sur place uniquement
-                        </div>
-                    </div>
-                </div>
-            </footer>
-        </div>
+        </>
     );
 }
