@@ -6,9 +6,9 @@
   "scripts": {
     "generate:cabinets": "node scripts/resolveCabinetMaps.mjs",
     "predev": "npm run generate:cabinets",
-    "prebuild": "npm run generate:cabinets",
     "dev": "vite",
-    "build": "vite build",
+    "prebuild": "npm run generate:cabinets",
+    "build": "npm run generate:cabinets && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
