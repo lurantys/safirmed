@@ -69,7 +69,6 @@ export default function SearchPage() {
         // Load all cabinets
         const mappedDoctors = [];
         for (let R = headerRow + 1; R <= range.e.r; R++) {
-          const idCell = worksheet[XLSX.utils.encode_cell({ c: headers['ID'] ?? 0, r: R })];
           const nameCell = worksheet[XLSX.utils.encode_cell({ c: headers['Nom du Cabinet / Médecin'] ?? 1, r: R })];
           if (!nameCell?.v) continue;
           
@@ -78,15 +77,17 @@ export default function SearchPage() {
           const addrCell = worksheet[XLSX.utils.encode_cell({ c: headers['Adresse'] ?? 3, r: R })];
           const linkCell = worksheet[XLSX.utils.encode_cell({ c: headers['Lien Google Maps'] ?? 4, r: R })];
           
+          const nameVal = nameCell?.v ? String(nameCell.v).trim() : '';
+          const addrVal = addrCell?.v ? String(addrCell.v).trim() : '';
           const mapsUrl = (linkCell?.l?.Target || linkCell?.v || '').toString().trim();
-          const embedUrl = convertToEmbedUrl(mapsUrl);
+          const embedUrl = convertToEmbedUrl(mapsUrl, nameVal, addrVal);
           
           mappedDoctors.push({
-            ID: String(idCell?.v || mappedDoctors.length + 1),
-            Nom: nameCell?.v ? String(nameCell.v).trim() : '',
+            ID: String(mappedDoctors.length + 1),
+            Nom: nameVal,
             Spécialité: specCell?.v ? String(specCell.v).trim() : '',
             Téléphone: phoneCell?.v ? String(phoneCell.v).trim() : '',
-            Adresse: addrCell?.v ? String(addrCell.v).trim() : '',
+            Adresse: addrVal,
             Ville: 'El Jadida',
             mapsUrl,
             embedUrl
@@ -228,8 +229,8 @@ export default function SearchPage() {
               {filteredDoctors.map((doc, idx) => (
                 <div key={idx} className="bg-white p-6 rounded-[1.5rem] shadow-sm shadow-slate-200/50 border border-slate-100 hover:shadow-lg hover:shadow-blue-200/20 hover:border-blue-100 transition-all group flex flex-col h-full">
                   <div className="flex gap-4 mb-4">
-                    <div className="h-16 w-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl shrink-0 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                      {doc.Nom ? String(doc.Nom).replace("Dr. ", "").charAt(0) : "D"}
+                    <div className="h-16 w-16 rounded-full overflow-hidden shrink-0 group-hover:scale-110 transition-all duration-300 border-2 border-slate-100 group-hover:border-blue-200 shadow-sm bg-white p-1">
+                      <img src="/doctor-avatar.png" alt="Profile" className="w-full h-full object-contain drop-shadow-sm" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3
@@ -255,7 +256,7 @@ export default function SearchPage() {
 
                   <div className="flex gap-3">
                     <a
-                      href={doc.MapSearchUrl}
+                      href={doc.mapsUrl || `https://maps.google.com/maps?q=${encodeURIComponent(doc.Nom + ', ' + doc.Adresse)}`}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-white border border-slate-100 text-slate-700 hover:bg-slate-50 shadow-sm"

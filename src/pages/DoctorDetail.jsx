@@ -42,24 +42,29 @@ export default function DoctorDetail() {
 
                 // Find matching cabinet
                 let found = null;
+                let currentId = 0;
                 for (let R = headerRow + 1; R <= range.e.r; R++) {
-                  const idCell = worksheet[XLSX.utils.encode_cell({ c: headers['ID'] ?? 0, r: R })];
-                  if (idCell?.v && String(idCell.v) === String(id)) {
-                    const nameCell = worksheet[XLSX.utils.encode_cell({ c: headers['Nom du Cabinet / Médecin'] ?? 1, r: R })];
+                  const nameCell = worksheet[XLSX.utils.encode_cell({ c: headers['Nom du Cabinet / Médecin'] ?? 1, r: R })];
+                  if (!nameCell?.v) continue;
+                  
+                  currentId++;
+                  if (String(currentId) === String(id)) {
                     const specCell = worksheet[XLSX.utils.encode_cell({ c: headers['Spécialité'] ?? 0, r: R })];
                     const phoneCell = worksheet[XLSX.utils.encode_cell({ c: headers['Téléphone'] ?? 2, r: R })];
                     const addrCell = worksheet[XLSX.utils.encode_cell({ c: headers['Adresse'] ?? 3, r: R })];
                     const linkCell = worksheet[XLSX.utils.encode_cell({ c: headers['Lien Google Maps'] ?? 4, r: R })];
                     
+                    const nameVal = nameCell?.v ? String(nameCell.v).trim() : '';
+                    const addrVal = addrCell?.v ? String(addrCell.v).trim() : '';
                     const mapsUrl = (linkCell?.l?.Target || linkCell?.v || '').toString().trim();
-                    const embedUrl = convertToEmbedUrl(mapsUrl);
+                    const embedUrl = convertToEmbedUrl(mapsUrl, nameVal, addrVal);
                     
                     found = {
                       ID: String(id),
-                      Nom: nameCell?.v ? String(nameCell.v).trim() : '',
+                      Nom: nameVal,
                       Spécialité: specCell?.v ? String(specCell.v).trim() : '',
                       Téléphone: phoneCell?.v ? String(phoneCell.v).trim() : '',
-                      Adresse: addrCell?.v ? String(addrCell.v).trim() : '',
+                      Adresse: addrVal,
                       Ville: 'El Jadida',
                       mapsUrl,
                       embedUrl
@@ -105,8 +110,8 @@ export default function DoctorDetail() {
                 <div className="bg-white rounded-[2rem] p-5 sm:p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col sm:flex-row gap-6 sm:gap-10 items-center sm:items-start relative overflow-hidden text-center sm:text-left">
                     <div className="absolute top-0 right-0 w-80 h-80 bg-blue-50 rounded-full blur-3xl opacity-60 -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
 
-                    <div className="h-32 w-32 md:h-40 md:w-40 bg-blue-600 text-white rounded-[2rem] flex items-center justify-center font-bold text-6xl shrink-0 shadow-xl shadow-blue-200/50 z-10 mx-auto sm:mx-0">
-                        {doctor.Nom ? String(doctor.Nom).replace("Dr. ", "").charAt(0) : "D"}
+                    <div className="h-32 w-32 md:h-40 md:w-40 bg-white rounded-[2rem] overflow-hidden shrink-0 shadow-xl shadow-blue-200/50 z-10 mx-auto sm:mx-0 border-[6px] border-white p-2">
+                        <img src="/doctor-avatar.png" alt="Profile" className="w-full h-full object-contain drop-shadow-md" />
                     </div>
 
                     <div className="flex-1 w-full z-10 flex flex-col items-center sm:items-start">
