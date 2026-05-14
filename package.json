@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "generate:cabinets": "node scripts/resolveCabinetMaps.mjs",
+    "predev": "npm run generate:cabinets",
+    "prebuild": "npm run generate:cabinets",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",

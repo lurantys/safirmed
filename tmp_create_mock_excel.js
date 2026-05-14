@@ -1,4 +1,4 @@
-const xlsx = require('xlsx');
+import * as xlsx from 'xlsx';
 
 const data = [
     { Nom: "Dr. Ahmed Youssef", Spécialité: "Cardiologue", Téléphone: "06 11 22 33 44", Adresse: "15 Avenue Hassan II", Ville: "El Jadida" },

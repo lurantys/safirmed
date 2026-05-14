@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, MapPin, Phone, CalendarCheck, Heart } from "lucide-react";
-import * as XLSX from 'xlsx';
+import { DEFAULT_CITY } from "@/constants";
 
 export default function DoctorDetail() {
     const { id } = useParams();
@@ -13,18 +13,19 @@ export default function DoctorDetail() {
     useEffect(() => {
         const fetchDoctor = async () => {
             try {
-                const response = await fetch('/SafirMed.xlsx');
+                const response = await fetch('/cabinets_resolved.json');
                 if (!response.ok) throw new Error('Network response was not ok');
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { range: 1 });
+                const mappedDoctors = await response.json();
 
-                // Give everyone an ID matching the index logic from search page
-                const doctorsWithIds = json.map((doc, idx) => ({ ...doc, ID: (idx + 1).toString() }));
-                const found = doctorsWithIds.find(doc => String(doc.ID) === String(id));
-                setDoctor(found || null);
+                const found = mappedDoctors.find(doc => String(doc.ID) === String(id));
+                setDoctor(found ? {
+                    ...found,
+                    embedUrl: found.embedUrl || '',
+                    MapSearchUrl: found.mapsUrl || found.MapSearchUrl || '',
+                    Ville: found.Ville || DEFAULT_CITY,
+                } : null);
             } catch (error) {
-                console.error(error);
+                console.error("Failed to fetch resolved cabinet details:", error);
             } finally {
                 setLoading(false);
             }
@@ -146,8 +147,8 @@ export default function DoctorDetail() {
                         <MapPin className="h-6 w-6 text-slate-400" /> Emplacement du cabinet
                     </h2>
                     <div className="w-full bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 h-[400px] shadow-inner relative z-10">
-                        <iframe
-                            src={doctor.MapEmbed || "https://maps.google.com/maps?q=El%20Jadida&t=&z=13&ie=UTF8&iwloc=&output=embed"}
+                            <iframe
+                                src={doctor.embedUrl || "https://maps.google.com/maps?q=El%20Jadida&t=&z=13&ie=UTF8&iwloc=&output=embed"}
                             width="100%"
                             height="100%"
                             style={{ border: 0 }}

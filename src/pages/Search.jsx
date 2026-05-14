@@ -4,15 +4,14 @@ import {
   Search,
   CalendarCheck,
   MapPin,
-  ArrowUpRight,
-  Heart,
-  Menu,
   ChevronDown,
   Check,
-  Phone
+  Phone,
+  Heart,
 } from "lucide-react";
-import * as XLSX from 'xlsx';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import Navbar from "@/components/Navbar";
+import { DEFAULT_CITY } from "@/constants";
 
 export default function SearchPage() {
   const navigate = useNavigate();
@@ -22,7 +21,7 @@ export default function SearchPage() {
 
   const [doctors, setDoctors] = useState([]);
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
-  const [selectedCity, setSelectedCity] = useState(searchParams.get("city") || "El Jadida");
+  const selectedCity = searchParams.get("city") || DEFAULT_CITY;
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
@@ -40,21 +39,16 @@ export default function SearchPage() {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await fetch('/SafirMed.xlsx');
+        const response = await fetch('/cabinets_resolved.json');
         if (!response.ok) throw new Error('Network response was not ok');
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-
-        // Use range: 1 to skip the leading empty row and treat row 2 as headers
-        const json = XLSX.utils.sheet_to_json(worksheet, { range: 1 });
-
-        // Ensure every doctor has an ID based on row index
-        const doctorsWithIds = json.map((doc, idx) => ({ ...doc, ID: (idx + 1).toString() }));
-        setDoctors(doctorsWithIds);
+        const mappedDoctors = await response.json();
+        setDoctors(mappedDoctors.map((doc) => ({
+          ...doc,
+          MapSearchUrl: doc.mapsUrl || doc.MapSearchUrl || '',
+          embedUrl: doc.embedUrl || '',
+        })));
       } catch (error) {
-        console.error("Error loading doctors from Excel:", error);
+        console.error("Error loading doctors from resolved cabinet JSON:", error);
       }
     };
     fetchDoctors();
@@ -79,39 +73,7 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
-      {/* Floating Navbar */}
-      <div className={`fixed top-0 w-full z-50 transition-all duration-500 ease-in-out ${isScrolled ? 'pt-6 px-4' : 'pt-0 px-0'}`}>
-        <nav
-          className={`mx-auto flex items-center justify-between transition-all duration-500 ease-in-out ${isScrolled
-            ? 'max-w-4xl bg-white/90 backdrop-blur-md shadow-lg rounded-full px-5 h-16 border border-slate-200/60'
-            : 'max-w-5xl bg-slate-50 px-6 h-24 border-b border-transparent'
-            }`}
-        >
-          <div
-            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => navigate('/')}
-          >
-            <Heart className={`text-blue-600 transition-all ${isScrolled ? 'h-6 w-6' : 'h-8 w-8'} fill-blue-600`} />
-            <span className={`font-bold tracking-tight text-slate-900 transition-all ${isScrolled ? 'text-lg' : 'text-2xl'}`}>
-              Safir<span className="text-blue-600">Med</span>
-            </span>
-          </div>
-
-
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="ghost" className={`hidden sm:flex rounded-full font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all ${isScrolled ? 'h-10 px-4 text-sm' : 'h-11 px-5 text-base'}`}>
-              Patients
-            </Button>
-            <Button className={`hidden sm:flex rounded-full bg-[#18181A] hover:bg-black text-white shadow-sm transition-all focus:ring-slate-900 items-center gap-2 border border-transparent hover:scale-105 active:scale-95 ${isScrolled ? 'h-10 px-5 text-sm' : 'h-11 px-6 text-base'}`}>
-              Docteurs / Soignants <ArrowUpRight className={isScrolled ? 'h-4 w-4' : 'h-4 w-4 text-white/80'} />
-            </Button>
-            <Button variant="ghost" size="icon" className="sm:hidden -mr-2 hover:bg-slate-100/50">
-              <Menu className="h-6 w-6 text-slate-700" />
-            </Button>
-          </div>
-        </nav>
-      </div>
+      <Navbar isScrolled={isScrolled} />
 
       <main className="flex-1 w-full max-w-5xl mx-auto px-6 pt-16">
         {/* SEARCH BAR SECTION */}
@@ -140,7 +102,7 @@ export default function SearchPage() {
                   onClick={() => setIsCityDropdownOpen(!isCityDropdownOpen)}
                 >
                   <MapPin className="h-6 w-6 sm:h-5 sm:w-5 text-slate-400 mr-3 shrink-0" />
-                  <span className="flex-1 text-slate-800 font-medium text-base truncate">El Jadida</span>
+                  <span className="flex-1 text-slate-800 font-medium text-base truncate">{DEFAULT_CITY}</span>
                   <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform duration-200 ${isCityDropdownOpen ? 'rotate-180' : ''}`} />
                 </div>
 
@@ -151,7 +113,7 @@ export default function SearchPage() {
                         className="flex items-center justify-between px-4 py-3 bg-blue-50/50 text-blue-900 rounded-xl cursor-default transition-colors"
                         onClick={() => setIsCityDropdownOpen(false)}
                       >
-                        <span className="font-medium text-base">El Jadida</span>
+                        <span className="font-medium text-base">{DEFAULT_CITY}</span>
                         <Check className="h-4 w-4 text-blue-600" />
                       </div>
                       <div className="px-4 py-3 text-slate-400 text-sm cursor-not-allowed border-t border-slate-50 mt-1">
@@ -177,7 +139,7 @@ export default function SearchPage() {
                 </div>
               </div>
 
-              <Button size="lg" className="rounded-full h-12 px-6 sm:px-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center justify-center gap-2 transition-transform hover:scale-105 active:scale-95 shrink-0 mt-2 sm:mt-0 w-full sm:w-auto">
+              <Button size="lg" onClick={() => setSearchParams({ q: searchQuery, city: selectedCity }, { replace: true })} className="rounded-full h-12 px-6 sm:px-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center justify-center gap-2 transition-transform hover:scale-105 active:scale-95 shrink-0 mt-2 sm:mt-0 w-full sm:w-auto">
                 <span className="sm:hidden lg:inline text-lg sm:text-base">Rechercher</span>
                 <Search className="h-5 w-5 hidden sm:inline lg:hidden" />
               </Button>
@@ -217,33 +179,47 @@ export default function SearchPage() {
           ) : filteredDoctors.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-6">
               {filteredDoctors.map((doc, idx) => (
-                <div key={idx} className="bg-white p-6 rounded-[1.5rem] shadow-sm shadow-slate-200/50 border border-slate-100 hover:shadow-lg hover:shadow-blue-200/20 hover:border-blue-100 transition-all group flex flex-col sm:flex-row gap-6 items-center sm:items-start text-center sm:text-left">
-                  <div className="h-20 w-20 sm:h-16 sm:w-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold text-2xl sm:text-xl shrink-0 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                    {doc.Nom ? String(doc.Nom).replace("Dr. ", "").charAt(0) : "D"}
-                  </div>
-                  <div className="flex-1 flex flex-col items-center sm:items-start w-full">
-                    <h3
-                      onClick={() => navigate(`/doctor/${doc.ID}`)}
-                      className="font-bold text-lg text-slate-900 mb-1 tracking-tight transition-colors cursor-pointer hover:text-blue-600 hover:underline decoration-blue-200 underline-offset-4"
-                    >
-                      {doc.Nom}
-                    </h3>
-                    <p className="text-blue-600 font-medium text-sm mb-3 bg-blue-50 w-fit px-2 py-0.5 rounded-full">{doc.Spécialité}</p>
-
-                    <div className="space-y-2 text-sm text-slate-500 font-medium">
-                      <div className="flex items-center justify-center sm:justify-start gap-2.5">
-                        <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
-                        <span className="truncate">{doc.Adresse ? `${doc.Adresse}, ` : ""}{doc.Ville}</span>
-                      </div>
-                      <div className="flex items-center justify-center sm:justify-start gap-2.5">
-                        <Phone className="h-4 w-4 shrink-0 text-slate-400" />
-                        <span>{doc.Téléphone}</span>
-                      </div>
+                <div key={idx} className="bg-white p-6 rounded-[1.5rem] shadow-sm shadow-slate-200/50 border border-slate-100 hover:shadow-lg hover:shadow-blue-200/20 hover:border-blue-100 transition-all group flex flex-col h-full">
+                  <div className="flex gap-4 mb-4">
+                    <div className="h-16 w-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl shrink-0 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                      {doc.Nom ? String(doc.Nom).replace("Dr. ", "").charAt(0) : "D"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3
+                        onClick={() => navigate(`/doctor/${doc.ID}`)}
+                        className="font-bold text-lg text-slate-900 mb-1 tracking-tight transition-colors cursor-pointer hover:text-blue-600 hover:underline decoration-blue-200 underline-offset-4 line-clamp-2"
+                      >
+                        {doc.Nom}
+                      </h3>
+                      <p className="text-blue-600 font-medium text-sm bg-blue-50 w-fit px-2 py-0.5 rounded-full">{doc.Spécialité}</p>
                     </div>
                   </div>
-                  <Button onClick={() => navigate(`/doctor/${doc.ID}`)} className="w-full sm:w-auto rounded-2xl sm:rounded-full bg-slate-900 hover:bg-blue-600 text-white font-semibold transition-all shadow-md shrink-0 focus:ring-4 focus:ring-blue-100 hover:scale-105 active:scale-95 whitespace-normal h-auto py-3 min-h-[48px]">
-                    Prendre RDV
-                  </Button>
+
+                  <div className="space-y-2 text-sm text-slate-500 font-medium mb-4 flex-1">
+                    <div className="flex items-start gap-2.5">
+                      <MapPin className="h-4 w-4 shrink-0 text-slate-400 mt-0.5" />
+                      <span className="break-words">{doc.Adresse ? `${doc.Adresse}, ` : ""}{doc.Ville}</span>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <Phone className="h-4 w-4 shrink-0 text-slate-400" />
+                      <span>{doc.Téléphone}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <a
+                      href={doc.MapSearchUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium bg-white border border-slate-100 text-slate-700 hover:bg-slate-50 shadow-sm"
+                    >
+                      Voir sur Maps
+                    </a>
+
+                    <Button onClick={() => navigate(`/doctor/${doc.ID}`)} className="flex-1 rounded-full bg-slate-900 hover:bg-blue-600 text-white font-semibold transition-all shadow-md focus:ring-4 focus:ring-blue-100 hover:scale-105 active:scale-95">
+                      Prendre RDV
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
