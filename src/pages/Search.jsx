@@ -250,7 +250,7 @@ export default function SearchPage() {
                       Voir sur Maps
                     </a>
 
-                    <Button onClick={() => navigate(`/doctor/${doc.ID}`)} className="flex-1 rounded-full bg-slate-900 hover:bg-blue-600 text-white font-semibold transition-all shadow-md focus:ring-4 focus:ring-blue-100 hover:scale-105 active:scale-95">
+                    <Button onClick={() => navigate(`/doctor/${doc.ID}`)} className="flex-1 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all shadow-md focus:ring-4 focus:ring-blue-100 hover:scale-105 active:scale-95">
                       Prendre RDV
                     </Button>
                   </div>

@@ -159,7 +159,7 @@ export default function DoctorDetail() {
                             <Button
                                 size="lg"
                                 onClick={() => { if (doctor.Téléphone) window.location.href = `tel:${doctor.Téléphone.replace(/[\s-]/g, '')}`; }}
-                                className="rounded-2xl sm:rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-200/50 gap-2 h-auto min-h-[56px] py-3 sm:py-0 px-4 sm:px-8 text-sm sm:text-base md:text-lg w-full lg:w-auto overflow-hidden whitespace-normal"
+                                className="rounded-2xl sm:rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-slate-200/50 gap-2 h-auto min-h-[56px] py-3 sm:py-0 px-4 sm:px-8 text-sm sm:text-base md:text-lg w-full lg:w-auto overflow-hidden whitespace-normal"
                             >
                                 <CalendarCheck className="h-5 w-5 shrink-0 hidden sm:block" /> Prendre RDV par téléphone
                             </Button>
