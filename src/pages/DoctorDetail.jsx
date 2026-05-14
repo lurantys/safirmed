@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, MapPin, Phone, CalendarCheck, Heart } from "lucide-react";
 import { DEFAULT_CITY } from "@/constants";
+import { convertToEmbedUrl } from "@/lib/mapsConverter";
+import * as XLSX from 'xlsx';
 
 export default function DoctorDetail() {
     const { id } = useParams();
@@ -13,19 +15,62 @@ export default function DoctorDetail() {
     useEffect(() => {
         const fetchDoctor = async () => {
             try {
-                const response = await fetch('/cabinets_resolved.json');
-                if (!response.ok) throw new Error('Network response was not ok');
-                const mappedDoctors = await response.json();
+                const response = await fetch('/cabinets_eljadida.xlsx');
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                
+                // Find header row
+                let headerRow = 0;
+                let headers = {};
+                const range = XLSX.utils.decode_range(worksheet['!ref']);
+                
+                for (let R = 0; R <= Math.min(5, range.e.r); R++) {
+                  const rowHeaders = {};
+                  for (let C = 0; C <= range.e.c; C++) {
+                    const cell = worksheet[XLSX.utils.encode_cell({ c: C, r: R })];
+                    if (cell?.v) {
+                      rowHeaders[String(cell.v).trim()] = C;
+                    }
+                  }
+                  if (Object.keys(rowHeaders).length > 3) {
+                    headerRow = R;
+                    headers = rowHeaders;
+                    break;
+                  }
+                }
 
-                const found = mappedDoctors.find(doc => String(doc.ID) === String(id));
-                setDoctor(found ? {
-                    ...found,
-                    embedUrl: found.embedUrl || '',
-                    MapSearchUrl: found.mapsUrl || found.MapSearchUrl || '',
-                    Ville: found.Ville || DEFAULT_CITY,
-                } : null);
+                // Find matching cabinet
+                let found = null;
+                for (let R = headerRow + 1; R <= range.e.r; R++) {
+                  const idCell = worksheet[XLSX.utils.encode_cell({ c: headers['ID'] ?? 0, r: R })];
+                  if (idCell?.v && String(idCell.v) === String(id)) {
+                    const nameCell = worksheet[XLSX.utils.encode_cell({ c: headers['Nom du Cabinet / Médecin'] ?? 1, r: R })];
+                    const specCell = worksheet[XLSX.utils.encode_cell({ c: headers['Spécialité'] ?? 0, r: R })];
+                    const phoneCell = worksheet[XLSX.utils.encode_cell({ c: headers['Téléphone'] ?? 2, r: R })];
+                    const addrCell = worksheet[XLSX.utils.encode_cell({ c: headers['Adresse'] ?? 3, r: R })];
+                    const linkCell = worksheet[XLSX.utils.encode_cell({ c: headers['Lien Google Maps'] ?? 4, r: R })];
+                    
+                    const mapsUrl = (linkCell?.l?.Target || linkCell?.v || '').toString().trim();
+                    const embedUrl = convertToEmbedUrl(mapsUrl);
+                    
+                    found = {
+                      ID: String(id),
+                      Nom: nameCell?.v ? String(nameCell.v).trim() : '',
+                      Spécialité: specCell?.v ? String(specCell.v).trim() : '',
+                      Téléphone: phoneCell?.v ? String(phoneCell.v).trim() : '',
+                      Adresse: addrCell?.v ? String(addrCell.v).trim() : '',
+                      Ville: 'El Jadida',
+                      mapsUrl,
+                      embedUrl
+                    };
+                    break;
+                  }
+                }
+
+                setDoctor(found);
             } catch (error) {
-                console.error("Failed to fetch resolved cabinet details:", error);
+                console.error("Failed to fetch cabinet details:", error);
             } finally {
                 setLoading(false);
             }

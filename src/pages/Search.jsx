@@ -12,6 +12,8 @@ import {
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navbar from "@/components/Navbar";
 import { DEFAULT_CITY } from "@/constants";
+import { convertToEmbedUrl } from "@/lib/mapsConverter";
+import * as XLSX from 'xlsx';
 
 export default function SearchPage() {
   const navigate = useNavigate();
@@ -39,16 +41,61 @@ export default function SearchPage() {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await fetch('/cabinets_resolved.json');
-        if (!response.ok) throw new Error('Network response was not ok');
-        const mappedDoctors = await response.json();
-        setDoctors(mappedDoctors.map((doc) => ({
-          ...doc,
-          MapSearchUrl: doc.mapsUrl || doc.MapSearchUrl || '',
-          embedUrl: doc.embedUrl || '',
-        })));
+        const response = await fetch('/cabinets_eljadida.xlsx');
+        const arrayBuffer = await response.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        
+        // Find header row
+        let headerRow = 0;
+        let headers = {};
+        const range = XLSX.utils.decode_range(worksheet['!ref']);
+        
+        for (let R = 0; R <= Math.min(5, range.e.r); R++) {
+          const rowHeaders = {};
+          for (let C = 0; C <= range.e.c; C++) {
+            const cell = worksheet[XLSX.utils.encode_cell({ c: C, r: R })];
+            if (cell?.v) {
+              rowHeaders[String(cell.v).trim()] = C;
+            }
+          }
+          if (Object.keys(rowHeaders).length > 3) {
+            headerRow = R;
+            headers = rowHeaders;
+            break;
+          }
+        }
+
+        // Load all cabinets
+        const mappedDoctors = [];
+        for (let R = headerRow + 1; R <= range.e.r; R++) {
+          const idCell = worksheet[XLSX.utils.encode_cell({ c: headers['ID'] ?? 0, r: R })];
+          const nameCell = worksheet[XLSX.utils.encode_cell({ c: headers['Nom du Cabinet / Médecin'] ?? 1, r: R })];
+          if (!nameCell?.v) continue;
+          
+          const specCell = worksheet[XLSX.utils.encode_cell({ c: headers['Spécialité'] ?? 0, r: R })];
+          const phoneCell = worksheet[XLSX.utils.encode_cell({ c: headers['Téléphone'] ?? 2, r: R })];
+          const addrCell = worksheet[XLSX.utils.encode_cell({ c: headers['Adresse'] ?? 3, r: R })];
+          const linkCell = worksheet[XLSX.utils.encode_cell({ c: headers['Lien Google Maps'] ?? 4, r: R })];
+          
+          const mapsUrl = (linkCell?.l?.Target || linkCell?.v || '').toString().trim();
+          const embedUrl = convertToEmbedUrl(mapsUrl);
+          
+          mappedDoctors.push({
+            ID: String(idCell?.v || mappedDoctors.length + 1),
+            Nom: nameCell?.v ? String(nameCell.v).trim() : '',
+            Spécialité: specCell?.v ? String(specCell.v).trim() : '',
+            Téléphone: phoneCell?.v ? String(phoneCell.v).trim() : '',
+            Adresse: addrCell?.v ? String(addrCell.v).trim() : '',
+            Ville: 'El Jadida',
+            mapsUrl,
+            embedUrl
+          });
+        }
+        
+        setDoctors(mappedDoctors);
       } catch (error) {
-        console.error("Error loading doctors from resolved cabinet JSON:", error);
+        console.error("Error loading doctors from XLSX:", error);
       }
     };
     fetchDoctors();
