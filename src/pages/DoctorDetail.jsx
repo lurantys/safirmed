@@ -40,6 +40,13 @@ export default function DoctorDetail() {
                   }
                 }
 
+                // Fetch scraped hours if available
+                let hoursJson = {};
+                try {
+                    const hoursRes = await fetch('/hours.json');
+                    hoursJson = await hoursRes.json();
+                } catch(e) {}
+
                 // Find matching cabinet
                 let found = null;
                 let currentId = 0;
@@ -59,6 +66,11 @@ export default function DoctorDetail() {
                     const mapsUrl = (linkCell?.l?.Target || linkCell?.v || '').toString().trim();
                     const embedUrl = convertToEmbedUrl(mapsUrl, nameVal, addrVal);
                     
+                    const scrapedHours = hoursJson[currentId];
+                    const formattedHours = (scrapedHours && scrapedHours !== 'Non spécifié' && scrapedHours !== 'Erreur') 
+                        ? scrapedHours.split(';').map(s => s.trim()).join('\\n') 
+                        : 'Horaires non spécifiés';
+                    
                     found = {
                       ID: String(id),
                       Nom: nameVal,
@@ -66,6 +78,7 @@ export default function DoctorDetail() {
                       Téléphone: phoneCell?.v ? String(phoneCell.v).trim() : '',
                       Adresse: addrVal,
                       Ville: 'El Jadida',
+                      Horaire: formattedHours,
                       mapsUrl,
                       embedUrl
                     };
@@ -137,7 +150,7 @@ export default function DoctorDetail() {
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-slate-900 font-bold mb-1">Horaires d'ouverture</span>
-                                    <span className="text-slate-500 leading-relaxed max-w-sm">{doctor.Horaire || "Horaires non spécifiés"}</span>
+                                    <span className="text-slate-500 leading-relaxed max-w-sm whitespace-pre-line">{doctor.Horaire || "Horaires non spécifiés"}</span>
                                 </div>
                             </div>
                         </div>
