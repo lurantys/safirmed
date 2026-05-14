@@ -132,7 +132,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
-              <img src="/logo.png" alt="SafirMed Logo" className="h-10 object-contain" />
+              <img src="/logo.png" alt="SafirMed Logo" className="h-20 object-contain" />
             </div>
 
             <div className="flex flex-wrap justify-center gap-8 text-sm font-medium text-slate-500">
