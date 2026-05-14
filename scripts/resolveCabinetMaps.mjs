@@ -1,4 +1,4 @@
-import fs from 'fs/promises';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import XLSX from 'xlsx';
 
@@ -14,25 +14,6 @@ function getHyperlinkTarget(cell) {
   if (!cell) return '';
   if (cell.l && cell.l.Target) return String(cell.l.Target).trim();
   if (typeof cell.v === 'string' && cell.v.includes('http')) return cell.v.trim();
-  return '';
-}
-
-function decodeMapsSegment(value) {
-  return decodeURIComponent(String(value).replace(/\+/g, ' ')).trim();
-}
-
-function extractPlaceId(source) {
-  const text = String(source || '');
-  try {
-    const parsed = new URL(text);
-    const q = parsed.searchParams.get('q');
-    if (q && q.startsWith('place_id:')) return q;
-  } catch {
-    // ignore
-  }
-
-  const match = text.match(/place_id:([A-Za-z0-9_-]+)/i);
-  if (match?.[1]) return `place_id:${match[1]}`;
   return '';
 }
 
@@ -60,40 +41,20 @@ function extractCoordinates(source) {
   return null;
 }
 
-function tryDecodeTwice(text) {
-  let current = String(text || '');
-  for (let i = 0; i < 2; i += 1) {
-    try {
-      const decoded = decodeURIComponent(current);
-      if (decoded === current) break;
-      current = decoded;
-    } catch {
-      break;
-    }
-  }
-  return current;
-}
-
-function unescapeGoogleHtml(text) {
-  return String(text || '')
-    .replace(/\\u003d/g, '=')
-    .replace(/\\u0026/g, '&')
-    .replace(/\\u003c/g, '<')
-    .replace(/\\u003e/g, '>')
-    .replace(/\\\//g, '/')
-    .replace(/&amp;/g, '&');
-}
-
 function extractPlaceName(source) {
   const text = String(source || '');
 
   const placeMatch = text.match(/\/maps\/place\/([^/@?]+)/i);
-  if (placeMatch?.[1]) return decodeMapsSegment(placeMatch[1]);
+  if (placeMatch?.[1]) {
+    return decodeURIComponent(String(placeMatch[1]).replace(/\+/g, ' ')).trim();
+  }
 
   try {
     const parsed = new URL(text);
     const q = parsed.searchParams.get('q');
-    if (q && !q.startsWith('place_id:')) return decodeMapsSegment(q);
+    if (q && !q.startsWith('place_id:')) {
+      return decodeURIComponent(String(q).replace(/\+/g, ' ')).trim();
+    }
   } catch {
     // ignore
   }
@@ -109,63 +70,31 @@ function toEmbedUrlFromPlaceName(name) {
   return `https://www.google.com/maps?q=${encodeURIComponent(name)}&output=embed`;
 }
 
-async function fetchGoogleMapsPage(url) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'user-agent': 'Mozilla/5.0',
-        'accept-language': 'en-US,en;q=0.9',
-      },
-    });
-
-    if (!response.ok) return '';
-    return await response.text();
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-async function resolveEmbedUrl(mapsUrl, fallbackName) {
+function resolveEmbedUrl(mapsUrl, fallbackName, fallbackAddress = '') {
   if (!mapsUrl) return fallbackName ? toEmbedUrlFromPlaceName(fallbackName) : '';
 
-  const placeId = extractPlaceId(mapsUrl);
-  if (placeId) {
-    return `https://maps.google.com/maps?q=${encodeURIComponent(placeId)}&output=embed`;
-  }
-
+  // Try to extract coordinates directly from the maps URL
   const directCoords = extractCoordinates(mapsUrl);
-  if (directCoords) return toEmbedUrlFromCoords(directCoords);
-
-  const pageHtml = await fetchGoogleMapsPage(mapsUrl).catch(() => '');
-  if (pageHtml) {
-    const decodedPageHtml = tryDecodeTwice(pageHtml);
-    const unescapedPageHtml = unescapeGoogleHtml(decodedPageHtml);
-
-    const pageCoords = extractCoordinates(pageHtml)
-      || extractCoordinates(decodedPageHtml)
-      || extractCoordinates(unescapedPageHtml);
-    if (pageCoords) return toEmbedUrlFromCoords(pageCoords);
-
-    const canonicalPlaceUrlMatch = unescapedPageHtml.match(/https:\/\/www\.google\.com\/maps\/place\/[^"'\s]+/i);
-    if (canonicalPlaceUrlMatch?.[0]) {
-      const canonicalCoords = extractCoordinates(canonicalPlaceUrlMatch[0]);
-      if (canonicalCoords) return toEmbedUrlFromCoords(canonicalCoords);
-    }
-
-    if (fallbackName) return toEmbedUrlFromPlaceName(fallbackName);
+  if (directCoords) {
+    return toEmbedUrlFromCoords(directCoords);
   }
 
+  // Try to extract place_id
+  const placeIdMatch = mapsUrl.match(/place_id:([A-Za-z0-9_-]+)/i);
+  if (placeIdMatch?.[1]) {
+    return `https://maps.google.com/maps?q=place_id:${placeIdMatch[1]}&output=embed`;
+  }
+
+  // Fall back to place name
   const fallbackPlaceName = extractPlaceName(mapsUrl) || fallbackName;
-  if (fallbackPlaceName) return toEmbedUrlFromPlaceName(fallbackPlaceName);
+  if (fallbackPlaceName) {
+    return toEmbedUrlFromPlaceName(fallbackPlaceName);
+  }
 
   return '';
 }
 
-async function main() {
+function main() {
   const workbook = XLSX.readFile(INPUT_XLSX);
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
   const range = XLSX.utils.decode_range(worksheet['!ref']);
@@ -214,7 +143,7 @@ async function main() {
     const phone = getCellString(phoneCell);
     const address = getCellString(addressCell);
     const mapsUrl = getHyperlinkTarget(linkCell);
-    const embedUrl = await resolveEmbedUrl(mapsUrl, name || address);
+    const embedUrl = resolveEmbedUrl(mapsUrl, name || address, address);
 
     cabinets.push({
       ID: String(cabinets.length + 1),
@@ -229,11 +158,8 @@ async function main() {
     });
   }
 
-  await fs.writeFile(OUTPUT_JSON, `${JSON.stringify(cabinets, null, 2)}\n`, 'utf8');
+  fs.writeFileSync(OUTPUT_JSON, `${JSON.stringify(cabinets, null, 2)}\n`, 'utf8');
   console.log(`Wrote ${cabinets.length} cabinets to ${OUTPUT_JSON}`);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+main();
