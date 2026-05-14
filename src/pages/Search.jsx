@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Search,
-  CalendarCheck,
   MapPin,
   ChevronDown,
   Check,
@@ -172,20 +171,7 @@ export default function SearchPage() {
                 )}
               </div>
 
-              <div className="hidden sm:block w-px h-8 bg-slate-200 shrink-0 mx-1"></div>
 
-              <div className="flex items-center sm:flex-[0.6] px-2 sm:px-1 py-3 sm:py-0">
-                <div className="w-full flex items-center hover:bg-slate-50 rounded-2xl sm:rounded-full px-4 py-2 transition-colors duration-200 focus-within:bg-white focus-within:shadow-sm focus-within:ring-1 focus-within:ring-slate-200">
-                  <CalendarCheck className="h-6 w-6 sm:h-5 sm:w-5 text-slate-400 mr-3 shrink-0" />
-                  <input
-                    type="date"
-                    min={new Date().toISOString().split('T')[0]}
-                    defaultValue={new Date().toISOString().split('T')[0]}
-                    className="bg-transparent border-none outline-none text-slate-800 font-medium text-base w-full min-w-0 cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-50 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 transition-opacity"
-                    style={{ colorScheme: 'light' }}
-                  />
-                </div>
-              </div>
 
               <Button size="lg" onClick={() => setSearchParams({ q: searchQuery, city: selectedCity }, { replace: true })} className="rounded-full h-12 px-6 sm:px-10 bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center justify-center gap-2 transition-transform hover:scale-105 active:scale-95 shrink-0 mt-2 sm:mt-0 w-full sm:w-auto">
                 <span className="sm:hidden lg:inline text-lg sm:text-base">Rechercher</span>
