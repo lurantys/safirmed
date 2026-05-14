@@ -163,9 +163,11 @@ export default function DoctorDetail() {
                             </Button>
 
                             {(() => {
-                                const rawPhone = String(doctor.Téléphone || "");
-                                const cleanPhone = rawPhone.replace(/[\s-]/g, "");
-                                const isMobile = /^0[678]/.test(cleanPhone) || /^\+212[678]/.test(cleanPhone);
+                                const rawPhone = String(doctor.Téléphone || "").trim();
+                                if (!rawPhone) return null;
+
+                                const digitsOnly = rawPhone.replace(/[^\d]/g, '');
+                                const waNumber = digitsOnly.startsWith('212') ? digitsOnly : '212' + digitsOnly;
 
                                 const WhatsappIcon = () => (
                                     <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current shrink-0 hidden sm:block" xmlns="http://www.w3.org/2000/svg">
@@ -173,28 +175,15 @@ export default function DoctorDetail() {
                                     </svg>
                                 );
 
-                                if (isMobile) {
-                                    const waNumber = cleanPhone.startsWith('0') ? '212' + cleanPhone.substring(1) : cleanPhone.replace('+', '');
-                                    return (
-                                        <Button
-                                            size="lg"
-                                            onClick={() => { window.open(`https://wa.me/${waNumber}`, '_blank'); }}
-                                            className="rounded-2xl sm:rounded-full bg-[#25D366] hover:bg-[#20BE5C] text-white shadow-xl shadow-[#25D366]/30 gap-2 h-auto min-h-[56px] py-3 sm:py-0 px-4 sm:px-8 text-sm sm:text-base md:text-lg w-full lg:w-auto overflow-hidden whitespace-normal"
-                                        >
-                                            <WhatsappIcon /> Prendre RDV par WhatsApp
-                                        </Button>
-                                    );
-                                } else {
-                                    return (
-                                        <Button
-                                            size="lg"
-                                            disabled
-                                            className="rounded-2xl sm:rounded-full bg-slate-200 text-slate-400 cursor-not-allowed gap-2 h-auto min-h-[56px] py-3 sm:py-0 px-4 sm:px-8 text-sm sm:text-base md:text-lg w-full lg:w-auto overflow-hidden whitespace-normal"
-                                        >
-                                            <WhatsappIcon /> WhatsApp non disponible
-                                        </Button>
-                                    );
-                                }
+                                return (
+                                    <Button
+                                        size="lg"
+                                        onClick={() => { window.open(`https://wa.me/${waNumber}`, '_blank'); }}
+                                        className="rounded-2xl sm:rounded-full bg-[#25D366] hover:bg-[#20BE5C] text-white shadow-xl shadow-[#25D366]/30 gap-2 h-auto min-h-[56px] py-3 sm:py-0 px-4 sm:px-8 text-sm sm:text-base md:text-lg w-full lg:w-auto overflow-hidden whitespace-normal"
+                                    >
+                                        <WhatsappIcon /> Prendre RDV par WhatsApp
+                                    </Button>
+                                );
                             })()}
                         </div>
                     </div>
