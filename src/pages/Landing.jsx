@@ -9,15 +9,20 @@ import {
 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import Navbar from "@/components/Navbar";
-import { DEFAULT_CITY } from "@/constants";
+import { DEFAULT_CITY, SPECIALTIES } from "@/constants";
 
 export default function Landing() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const selectedCity = DEFAULT_CITY;
   const navigate = useNavigate();
+
+  const filteredSpecialties = searchQuery.trim().length > 0
+    ? SPECIALTIES.filter(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
+    : [];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,15 +59,40 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row sm:items-center bg-white rounded-3xl sm:rounded-full p-2 shadow-xl shadow-slate-200/50 border border-slate-100 transition-all duration-300 hover:shadow-2xl hover:shadow-slate-200/60 gap-2 sm:gap-0">
 
               <div className="flex items-center flex-1 sm:border-none border-b border-slate-100">
-                <div className="w-full flex items-center hover:bg-slate-50 sm:rounded-full px-4 py-2 transition-colors duration-200 focus-within:bg-white focus-within:shadow-sm focus-within:ring-1 focus-within:ring-slate-200 cursor-text">
+                <div className="w-full flex items-center hover:bg-slate-50 sm:rounded-full px-4 py-2 transition-colors duration-200 focus-within:bg-white focus-within:shadow-sm focus-within:ring-1 focus-within:ring-slate-200 cursor-text relative">
                   <Search className="h-6 w-6 sm:h-5 sm:w-5 text-slate-400 mr-3 shrink-0" />
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                     placeholder="Spécialité, médecin..."
                     className="flex-1 bg-transparent border-none outline-none text-slate-800 placeholder:text-slate-400 text-base sm:text-lg w-full min-w-0"
                   />
+                  {showSuggestions && filteredSpecialties.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="p-1 max-h-60 overflow-y-auto">
+                        {filteredSpecialties.map((spec, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-xl cursor-pointer transition-colors"
+                            onClick={() => {
+                              setSearchQuery(spec);
+                              setShowSuggestions(false);
+                              navigate(`/search?q=${encodeURIComponent(spec)}&city=${encodeURIComponent(selectedCity)}`);
+                            }}
+                          >
+                            <Search className="h-4 w-4 text-slate-400" />
+                            <span className="font-medium">{spec}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
