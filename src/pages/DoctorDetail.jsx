@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, MapPin, Phone, CalendarCheck } from "lucide-react";
+import { convertToEmbedUrl } from "@/lib/mapsConverter";
+import * as XLSX from 'xlsx';
 
 export default function DoctorDetail() {
     const { id } = useParams();
@@ -12,24 +14,75 @@ export default function DoctorDetail() {
     useEffect(() => {
         const fetchDoctor = async () => {
             try {
-                const [res, hoursRes] = await Promise.all([
-                    fetch('/cabinets_resolved.json'),
-                    fetch('/hours.json').catch(() => null)
-                ]);
-                const cabinets = await res.json();
-                const hoursJson = hoursRes ? await hoursRes.json() : {};
+                const response = await fetch('/cabinets_eljadida.xlsx');
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
-                const found = cabinets.find(c => String(c.ID) === String(id));
+                let headerRow = 0;
+                let headers = {};
+                const range = XLSX.utils.decode_range(worksheet['!ref']);
 
-                if (found) {
-                    const scrapedHours = hoursJson[id];
+                for (let R = 0; R <= Math.min(5, range.e.r); R++) {
+                  const rowHeaders = {};
+                  for (let C = 0; C <= range.e.c; C++) {
+                    const cell = worksheet[XLSX.utils.encode_cell({ c: C, r: R })];
+                    if (cell?.v) {
+                      rowHeaders[String(cell.v).trim()] = C;
+                    }
+                  }
+                  if (Object.keys(rowHeaders).length > 3) {
+                    headerRow = R;
+                    headers = rowHeaders;
+                    break;
+                  }
+                }
+
+                let hoursJson = {};
+                try {
+                    const hoursRes = await fetch('/hours.json');
+                    hoursJson = await hoursRes.json();
+                } catch(e) {}
+
+                let found = null;
+                let currentId = 0;
+                for (let R = headerRow + 1; R <= range.e.r; R++) {
+                  const nameCell = worksheet[XLSX.utils.encode_cell({ c: headers['Nom du Cabinet / Médecin'] ?? 1, r: R })];
+                  if (!nameCell?.v) continue;
+
+                  currentId++;
+                  if (String(currentId) === String(id)) {
+                    const specCell = worksheet[XLSX.utils.encode_cell({ c: headers['Spécialité'] ?? 0, r: R })];
+                    const phoneCell = worksheet[XLSX.utils.encode_cell({ c: headers['Téléphone'] ?? 2, r: R })];
+                    const addrCell = worksheet[XLSX.utils.encode_cell({ c: headers['Adresse'] ?? 3, r: R })];
+                    const linkCell = worksheet[XLSX.utils.encode_cell({ c: headers['Lien Google Maps'] ?? 4, r: R })];
+
+                    const nameVal = nameCell?.v ? String(nameCell.v).trim() : '';
+                    const addrVal = addrCell?.v ? String(addrCell.v).trim() : '';
+                    const mapsUrl = (linkCell?.l?.Target || linkCell?.v || '').toString().trim();
+                    const embedUrl = convertToEmbedUrl(mapsUrl, nameVal, addrVal);
+
+                    const scrapedHours = hoursJson[currentId];
                     const formattedHours = (scrapedHours && scrapedHours !== 'Non spécifié' && scrapedHours !== 'Erreur')
                         ? scrapedHours.split(';').map(s => s.trim()).join('\\n')
                         : 'Horaires non spécifiés';
-                    setDoctor({ ...found, Horaire: formattedHours });
-                } else {
-                    setDoctor(null);
+
+                    found = {
+                      ID: String(id),
+                      Nom: nameVal,
+                      Spécialité: specCell?.v ? String(specCell.v).trim() : '',
+                      Téléphone: phoneCell?.v ? String(phoneCell.v).trim() : '',
+                      Adresse: addrVal,
+                      Ville: 'El Jadida',
+                      Horaire: formattedHours,
+                      mapsUrl,
+                      embedUrl
+                    };
+                    break;
+                  }
                 }
+
+                setDoctor(found);
             } catch (error) {
                 console.error("Failed to fetch cabinet details:", error);
             } finally {
