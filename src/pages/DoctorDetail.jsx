@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, MapPin, Phone, CalendarCheck } from "lucide-react";
-import { convertToEmbedUrl } from "@/lib/mapsConverter";
-import * as XLSX from 'xlsx';
 
 export default function DoctorDetail() {
     const { id } = useParams();
@@ -14,75 +12,24 @@ export default function DoctorDetail() {
     useEffect(() => {
         const fetchDoctor = async () => {
             try {
-                const response = await fetch('/cabinets_eljadida.xlsx');
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const [res, hoursRes] = await Promise.all([
+                    fetch('/cabinets_resolved.json'),
+                    fetch('/hours.json').catch(() => null)
+                ]);
+                const cabinets = await res.json();
+                const hoursJson = hoursRes ? await hoursRes.json() : {};
 
-                let headerRow = 0;
-                let headers = {};
-                const range = XLSX.utils.decode_range(worksheet['!ref']);
+                const found = cabinets.find(c => String(c.ID) === String(id));
 
-                for (let R = 0; R <= Math.min(5, range.e.r); R++) {
-                  const rowHeaders = {};
-                  for (let C = 0; C <= range.e.c; C++) {
-                    const cell = worksheet[XLSX.utils.encode_cell({ c: C, r: R })];
-                    if (cell?.v) {
-                      rowHeaders[String(cell.v).trim()] = C;
-                    }
-                  }
-                  if (Object.keys(rowHeaders).length > 3) {
-                    headerRow = R;
-                    headers = rowHeaders;
-                    break;
-                  }
-                }
-
-                let hoursJson = {};
-                try {
-                    const hoursRes = await fetch('/hours.json');
-                    hoursJson = await hoursRes.json();
-                } catch(e) {}
-
-                let found = null;
-                let currentId = 0;
-                for (let R = headerRow + 1; R <= range.e.r; R++) {
-                  const nameCell = worksheet[XLSX.utils.encode_cell({ c: headers['Nom du Cabinet / Médecin'] ?? 1, r: R })];
-                  if (!nameCell?.v) continue;
-
-                  currentId++;
-                  if (String(currentId) === String(id)) {
-                    const specCell = worksheet[XLSX.utils.encode_cell({ c: headers['Spécialité'] ?? 0, r: R })];
-                    const phoneCell = worksheet[XLSX.utils.encode_cell({ c: headers['Téléphone'] ?? 2, r: R })];
-                    const addrCell = worksheet[XLSX.utils.encode_cell({ c: headers['Adresse'] ?? 3, r: R })];
-                    const linkCell = worksheet[XLSX.utils.encode_cell({ c: headers['Lien Google Maps'] ?? 4, r: R })];
-
-                    const nameVal = nameCell?.v ? String(nameCell.v).trim() : '';
-                    const addrVal = addrCell?.v ? String(addrCell.v).trim() : '';
-                    const mapsUrl = (linkCell?.l?.Target || linkCell?.v || '').toString().trim();
-                    const embedUrl = convertToEmbedUrl(mapsUrl, nameVal, addrVal);
-
-                    const scrapedHours = hoursJson[currentId];
+                if (found) {
+                    const scrapedHours = hoursJson[id];
                     const formattedHours = (scrapedHours && scrapedHours !== 'Non spécifié' && scrapedHours !== 'Erreur')
                         ? scrapedHours.split(';').map(s => s.trim()).join('\\n')
                         : 'Horaires non spécifiés';
-
-                    found = {
-                      ID: String(id),
-                      Nom: nameVal,
-                      Spécialité: specCell?.v ? String(specCell.v).trim() : '',
-                      Téléphone: phoneCell?.v ? String(phoneCell.v).trim() : '',
-                      Adresse: addrVal,
-                      Ville: 'El Jadida',
-                      Horaire: formattedHours,
-                      mapsUrl,
-                      embedUrl
-                    };
-                    break;
-                  }
+                    setDoctor({ ...found, Horaire: formattedHours });
+                } else {
+                    setDoctor(null);
                 }
-
-                setDoctor(found);
             } catch (error) {
                 console.error("Failed to fetch cabinet details:", error);
             } finally {
@@ -163,11 +110,9 @@ export default function DoctorDetail() {
                             </Button>
 
                             {(() => {
-                                const rawPhone = String(doctor.Téléphone || "").trim();
-                                if (!rawPhone) return null;
-
-                                const digitsOnly = rawPhone.replace(/[^\d]/g, '');
-                                const waNumber = digitsOnly.startsWith('212') ? digitsOnly : '212' + digitsOnly;
+                                const rawPhone = String(doctor.Téléphone || "");
+                                const cleanPhone = rawPhone.replace(/[\s-]/g, "");
+                                const isMobile = /^0[678]/.test(cleanPhone) || /^\+212[678]/.test(cleanPhone);
 
                                 const WhatsappIcon = () => (
                                     <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current shrink-0 hidden sm:block" xmlns="http://www.w3.org/2000/svg">
@@ -175,15 +120,20 @@ export default function DoctorDetail() {
                                     </svg>
                                 );
 
-                                return (
-                                    <Button
-                                        size="lg"
-                                        onClick={() => { window.open(`https://wa.me/${waNumber}`, '_blank'); }}
-                                        className="rounded-2xl sm:rounded-full bg-[#25D366] hover:bg-[#20BE5C] text-white shadow-xl shadow-[#25D366]/30 gap-2 h-auto min-h-[56px] py-3 sm:py-0 px-4 sm:px-8 text-sm sm:text-base md:text-lg w-full lg:w-auto overflow-hidden whitespace-normal"
-                                    >
-                                        <WhatsappIcon /> Prendre RDV par WhatsApp
-                                    </Button>
-                                );
+                                if (isMobile) {
+                                    const waNumber = cleanPhone.startsWith('0') ? '212' + cleanPhone.substring(1) : cleanPhone.replace('+', '');
+                                    return (
+                                        <Button
+                                            size="lg"
+                                            onClick={() => { window.open(`https://wa.me/${waNumber}`, '_blank'); }}
+                                            className="rounded-2xl sm:rounded-full bg-[#25D366] hover:bg-[#20BE5C] text-white shadow-xl shadow-[#25D366]/30 gap-2 h-auto min-h-[56px] py-3 sm:py-0 px-4 sm:px-8 text-sm sm:text-base md:text-lg w-full lg:w-auto overflow-hidden whitespace-normal"
+                                        >
+                                            <WhatsappIcon /> Prendre RDV par WhatsApp
+                                        </Button>
+                                    );
+                                } else {
+                                    return null;
+                                }
                             })()}
                         </div>
                     </div>
