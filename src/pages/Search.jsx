@@ -11,6 +11,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DEFAULT_CITY, SPECIALTIES } from "@/constants";
 import SEOHead from '@/components/seo/SEOHead';
 import RatingStars from '@/components/RatingStars';
+import { sortByWeighted } from '@/utils/ratings';
 
 export default function SearchPage() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function SearchPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const selectedCity = searchParams.get("city") || DEFAULT_CITY;
   const [isSearching, setIsSearching] = useState(false);
+  const [sorted, setSorted] = useState(false);
 
   const filteredSpecialties = searchQuery.trim().length > 0
     ? SPECIALTIES.filter(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -59,6 +61,8 @@ export default function SearchPage() {
     const matchesCity = selectedCity === 'Toutes' || (doc.Ville && String(doc.Ville).toLowerCase() === selectedCity.toLowerCase());
     return matchesSearch && matchesCity;
   });
+
+  if (sorted) filteredDoctors.sort(sortByWeighted);
 
   return (
     <div className="max-w-5xl mx-auto pt-16">
@@ -157,9 +161,20 @@ export default function SearchPage() {
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
             {searchQuery ? `Résultats pour "${searchQuery}"` : "Médecins recommandés"}
           </h2>
-          <span className="text-slate-500 font-medium bg-slate-100 px-4 py-1.5 rounded-full text-sm">
+          <span           className="text-slate-500 font-medium bg-slate-100 px-4 py-1.5 rounded-full text-sm">
             {isSearching ? "Recherche..." : `${filteredDoctors.length} ${filteredDoctors.length > 1 ? 'résultats correspondants' : 'résultat correspondant'}`}
           </span>
+          <button
+            onClick={() => setSorted(!sorted)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              sorted ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+            }`}
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3z" />
+            </svg>
+            {sorted ? 'Meilleurs avis' : 'Trier par notes'}
+          </button>
         </div>
 
         {isSearching ? (

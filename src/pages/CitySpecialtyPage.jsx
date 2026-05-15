@@ -7,6 +7,7 @@ import Breadcrumbs from '@/components/seo/Breadcrumbs';
 import FAQSection from '@/components/seo/FAQSection';
 import RelatedLinks from '@/components/seo/RelatedLinks';
 import RatingStars from '@/components/RatingStars';
+import { sortByWeighted } from '@/utils/ratings';
 import { cityBySlug } from '@/seo/cities';
 import { SPECIALTIES_DATA, specialtyBySlug } from '@/seo/specialties';
 import * as XLSX from 'xlsx';
@@ -30,11 +31,13 @@ export default function CitySpecialtyPage() {
       try {
         const response = await fetch('/cabinets_resolved.json');
         const data = await response.json();
-        setDoctors(data.filter(d => {
+        const filtered = data.filter(d => {
           const matchesSpecialty = d.Spécialité?.toLowerCase().includes(specialtyName.toLowerCase());
           const matchesCity = d.Ville?.toLowerCase() === cityName.toLowerCase();
           return matchesSpecialty && matchesCity;
-        }));
+        });
+        filtered.sort(sortByWeighted);
+        setDoctors(filtered);
       } catch (e) {
         console.error('Failed to load doctors:', e);
       } finally {
