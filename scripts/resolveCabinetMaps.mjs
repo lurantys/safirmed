@@ -99,7 +99,25 @@ function resolveEmbedUrl(mapsUrl, fallbackName, fallbackAddress = '') {
   return '';
 }
 
+function loadExistingRatings() {
+  try {
+    const raw = fs.readFileSync(OUTPUT_JSON, 'utf-8');
+    const data = JSON.parse(raw);
+    const map = {};
+    for (const doc of data) {
+      if (doc.rating) {
+        const key = doc.mapsUrl || doc.ID || doc.Nom;
+        map[key] = { rating: doc.rating, ratingCount: doc.ratingCount || 0 };
+      }
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 function main() {
+  const existingRatings = loadExistingRatings();
   const workbook = XLSX.readFile(INPUT_XLSX);
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
   const range = XLSX.utils.decode_range(worksheet['!ref']);
@@ -150,6 +168,8 @@ function main() {
     const mapsUrl = getHyperlinkTarget(linkCell);
     const embedUrl = resolveEmbedUrl(mapsUrl, name || address, address);
 
+    const existing = mapsUrl && existingRatings[mapsUrl] ? existingRatings[mapsUrl] : null;
+
     cabinets.push({
       ID: String(cabinets.length + 1),
       Nom: name,
@@ -160,6 +180,8 @@ function main() {
       Horaire: 'Horaires non spécifiés',
       mapsUrl,
       embedUrl,
+      rating: existing?.rating || null,
+      ratingCount: existing?.ratingCount || 0,
     });
   }
 

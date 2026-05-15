@@ -20,6 +20,8 @@ async function main() {
     return;
   }
 
+  const force = process.argv.includes('--force');
+
   const raw = fs.readFileSync(DATA_PATH, 'utf-8');
   const doctors = JSON.parse(raw);
   let updated = 0;
@@ -29,7 +31,7 @@ async function main() {
     const doc = doctors[i];
     const placeId = extractPlaceId(doc.mapsUrl);
 
-    if (doc.rating && doc.rating > 0) {
+    if (!force && doc.rating && doc.rating > 0) {
       skipped++;
       continue;
     }
@@ -57,9 +59,9 @@ async function main() {
 
   if (updated > 0) {
     fs.writeFileSync(DATA_PATH, JSON.stringify(doctors, null, 2), 'utf-8');
-    console.log(`\n✓ Updated ${updated} doctors with Google ratings (${skipped} already had ratings).`);
+    console.log(`\n✓ Updated ${updated} doctors with Google ratings (${skipped} skipped, use --force to refresh).`);
   } else {
-    console.log(`\nNo new ratings fetched (${skipped} already had ratings).`);
+    console.log(`\nNo new ratings fetched (${skipped} skipped, use --force to refresh).`);
   }
 }
 
