@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MessageCircle, SendHorizonal, Stethoscope, ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { matchSpecialty, getSpecialtyDescription } from '@/utils/symptomMatcher';
+import { matchSpecialtyWithAI } from '@/utils/aiMatcher';
 import { DEFAULT_CITY } from "@/constants";
 
 const SUGGESTIONS = [
@@ -40,39 +41,29 @@ export default function SymptomChat({ onBack }) {
     setMessages(prev => [...prev, { id: Date.now(), role, text, specialty }]);
   };
 
+  const analyzeSymptoms = async (text) => {
+    setLoading(true);
+    const specialty = await matchSpecialtyWithAI(text) || matchSpecialty(text);
+    if (specialty) {
+      addMessage('bot', `D'après vos symptômes, je vous recommande de consulter un **${specialty}**.`, specialty);
+    } else {
+      addMessage('bot', "Je n'ai pas pu identifier clairement vos symptômes. Je vous recommande de consulter un médecin généraliste qui pourra vous orienter.", "Médecine Générale");
+    }
+    setLoading(false);
+  };
+
   const handleSend = () => {
     const text = input.trim();
     if (!text || loading) return;
     setInput('');
     addMessage('user', text);
-    setLoading(true);
-
-    setTimeout(() => {
-      const specialty = matchSpecialty(text);
-      if (specialty) {
-        const desc = getSpecialtyDescription(specialty);
-        addMessage('bot', `D'après vos symptômes, je vous recommande de consulter un **${specialty}**.`, specialty);
-      } else {
-        addMessage('bot', "Je n'ai pas pu identifier clairement vos symptômes. Je vous recommande de consulter un médecin généraliste qui pourra vous orienter.", "Médecine Générale");
-      }
-      setLoading(false);
-    }, 600);
+    analyzeSymptoms(text);
   };
 
   const handleSuggestion = (text) => {
     setInput('');
     addMessage('user', text);
-    setLoading(true);
-
-    setTimeout(() => {
-      const specialty = matchSpecialty(text);
-      if (specialty) {
-        addMessage('bot', `D'après vos symptômes, je vous recommande de consulter un **${specialty}**.`, specialty);
-      } else {
-        addMessage('bot', "Je n'ai pas pu identifier clairement vos symptômes. Je vous recommande de consulter un médecin généraliste qui pourra vous orienter.", "Médecine Générale");
-      }
-      setLoading(false);
-    }, 600);
+    analyzeSymptoms(text);
   };
 
   const handleKeyDown = (e) => {
