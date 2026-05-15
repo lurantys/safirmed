@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from '@/lib/firebase';
 import { Mail, Lock, User, Phone, Stethoscope, Check } from "lucide-react";
 
@@ -23,17 +23,35 @@ export default function SignUp() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const createAccount = async (authResult, extraData) => {
-    const uid = authResult.user.uid;
-    await setDoc(doc(db, 'users', uid), {
-      role,
-      name,
-      email: authResult.user.email || email,
-      phone,
-      ...extraData,
-      createdAt: new Date().toISOString(),
+  useEffect(() => {
+    getRedirectResult(auth).then(async (result) => {
+      if (!result) return;
+      const savedRole = sessionStorage.getItem('signupRole') || 'patient';
+      const savedName = sessionStorage.getItem('signupName') || result.user.displayName || '';
+      const savedPhone = sessionStorage.getItem('signupPhone') || result.user.phoneNumber || '';
+      const savedSpecialty = sessionStorage.getItem('signupSpecialty') || '';
+      try {
+        const existing = await getDoc(doc(db, 'users', result.user.uid));
+        if (!existing.exists()) {
+          await setDoc(doc(db, 'users', result.user.uid), {
+            role: savedRole,
+            name: savedName,
+            email: result.user.email,
+            phone: savedPhone,
+            ...(savedRole === 'doctor' ? { specialty: savedSpecialty } : {}),
+            createdAt: new Date().toISOString(),
+          });
+        }
+      } catch (e) {
+        console.error('Failed to save profile after redirect:', e);
+      }
+      sessionStorage.removeItem('signupRole');
+      sessionStorage.removeItem('signupName');
+      sessionStorage.removeItem('signupPhone');
+      sessionStorage.removeItem('signupSpecialty');
+      navigate('/');
     });
-  };
+  }, [navigate]);
 
   const handleEmailSignUp = async (e) => {
     e.preventDefault();
@@ -41,8 +59,14 @@ export default function SignUp() {
     setSubmitting(true);
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
-      const extra = role === 'doctor' ? { specialty } : {};
-      await createAccount(cred, extra);
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        role,
+        name,
+        email,
+        phone,
+        ...(role === 'doctor' ? { specialty } : {}),
+        createdAt: new Date().toISOString(),
+      });
       navigate('/');
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') setError('Cet email est déjà utilisé');
@@ -53,22 +77,14 @@ export default function SignUp() {
     }
   };
 
-  const handleGoogleSignUp = async () => {
-    setError('');
+  const handleGoogleSignUp = () => {
+    if (!role) return;
+    sessionStorage.setItem('signupRole', role);
+    sessionStorage.setItem('signupName', name);
+    sessionStorage.setItem('signupPhone', phone);
+    sessionStorage.setItem('signupSpecialty', specialty);
     setSubmitting(true);
-    try {
-      const cred = await signInWithPopup(auth, googleProvider);
-      const extra = role === 'doctor' ? { specialty } : {};
-      await createAccount(cred, extra);
-      navigate('/');
-    } catch (err) {
-      console.error('Google sign-up error:', err.code, err.message);
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError(`Erreur: ${err.code}`);
-      }
-    } finally {
-      setSubmitting(false);
-    }
+    signInWithRedirect(auth, googleProvider);
   };
 
   return (
