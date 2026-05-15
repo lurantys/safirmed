@@ -1,5 +1,6 @@
+import { OpenRouter } from '@openrouter/sdk';
+
 const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
-const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 const SPECIALTIES_LIST = [
   "Médecine Générale", "Dentaire", "Gynécologie – Obstétrique",
@@ -7,6 +8,10 @@ const SPECIALTIES_LIST = [
   "ORL – Oto-Rhino-Laryngologie", "Orthopédie – Traumatologie",
   "Psychiatrie – Psychologie"
 ];
+
+const client = new OpenRouter({
+  apiKey: API_KEY,
+});
 
 export async function matchSpecialtyWithAI(symptoms) {
   if (!API_KEY) return null;
@@ -20,42 +25,27 @@ Réponds UNIQUEMENT avec le nom exact de la spécialité, rien d'autre.
 Symptômes du patient : "${symptoms}"`;
 
   try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.origin,
-      },
-      body: JSON.stringify({
+    const response = await client.chat.send({
+      httpReferer: window.location.origin,
+      chatRequest: {
         model: 'openrouter/free',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 50,
+        maxTokens: 50,
         temperature: 0,
-      }),
-      signal: AbortSignal.timeout(10000),
+        stream: false,
+      },
     });
 
-    if (!response.ok) {
-      console.error('OpenRouter API error:', response.status, response.statusText);
-      return null;
+    if ('choices' in response && response.choices?.[0]?.message?.content) {
+      const specialty = response.choices[0].message.content.trim();
+      if (SPECIALTIES_LIST.includes(specialty)) {
+        return specialty;
+      }
+      console.warn('AI returned invalid specialty:', specialty);
     }
-
-    const data = await response.json();
-    const specialty = data.choices?.[0]?.message?.content?.trim();
-
-    if (SPECIALTIES_LIST.includes(specialty)) {
-      return specialty;
-    }
-
-    console.warn('AI returned invalid specialty:', specialty);
     return null;
   } catch (err) {
-    if (err.name === 'TimeoutError') {
-      console.warn('OpenRouter API timeout');
-    } else {
-      console.error('OpenRouter API call failed:', err);
-    }
+    console.error('OpenRouter API call failed:', err);
     return null;
   }
 }
