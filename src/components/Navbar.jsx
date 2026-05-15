@@ -15,7 +15,7 @@ export default function Navbar({ isScrolled = false }) {
     setLoggingOut(true);
     try {
       await signOut(auth);
-      navigate('/');
+      window.location.href = '/';
     } catch {
       setLoggingOut(false);
     }
