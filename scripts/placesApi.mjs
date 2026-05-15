@@ -9,7 +9,7 @@ function extractPlaceId(mapsUrl) {
 async function fetchRating(placeId) {
   if (!API_KEY) return null;
   try {
-    const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?fields=rating,userRatingCount&language=fr&key=${API_KEY}`;
+    const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?fields=rating,userRatingCount&languageCode=fr&key=${API_KEY}`;
     const res = await fetch(url);
     if (!res.ok) {
       const text = await res.text();
