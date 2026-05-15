@@ -9,22 +9,20 @@ function extractPlaceId(mapsUrl) {
 async function fetchRating(placeId) {
   if (!API_KEY) return null;
   try {
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&key=${API_KEY}&language=fr&fields=rating,user_ratings_total`;
+    const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?fields=rating,userRatingCount&language=fr&key=${API_KEY}`;
     const res = await fetch(url);
     if (!res.ok) {
       const text = await res.text();
-      console.warn(`  Places API error ${res.status}: ${text.slice(0, 100)}`);
+      console.warn(`  Places API error ${res.status}: ${text.slice(0, 150)}`);
       return null;
     }
     const data = await res.json();
-    if (data.status !== 'OK') {
-      if (data.status !== 'NOT_FOUND' && data.status !== 'ZERO_RESULTS') {
-        console.warn(`  Places API status ${data.status}: ${data.error_message || ''}`);
-      }
+    if (data.error) {
+      console.warn(`  Places API error: ${data.error.message || JSON.stringify(data.error)}`);
       return null;
     }
-    if (data.result?.rating && data.result.rating >= 1 && data.result.rating <= 5) {
-      return { rating: data.result.rating, count: data.result.user_ratings_total || 0 };
+    if (data.rating && data.rating >= 1 && data.rating <= 5) {
+      return { rating: data.rating, count: data.userRatingCount || 0 };
     }
     return null;
   } catch (err) {
