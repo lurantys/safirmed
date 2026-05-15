@@ -11,6 +11,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { DEFAULT_CITY, SPECIALTIES } from "@/constants";
 import SymptomChat from '@/components/SymptomChat';
+import SEOHead from '@/components/seo/SEOHead';
+import { SPECIALTIES_DATA } from '@/seo/specialties';
+import { CITIES, slugifyCity } from '@/seo/cities';
 
 export default function Landing() {
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
@@ -30,6 +33,11 @@ export default function Landing() {
 
   return (
     <div className="max-w-5xl mx-auto pt-16">
+      <SEOHead
+        title="SafirMed – Rendez-vous médical à El Jadida"
+        description="Trouvez rapidement un médecin à El Jadida. Consultez les disponibilités, adresses et prenez rendez-vous en ligne gratuitement."
+        canonical="/"
+      />
       <section className="py-20 md:py-32 flex flex-col items-center text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-sm font-medium mb-8 border border-emerald-100 shadow-sm cursor-default hover:bg-emerald-100 transition-colors">
           <span className="relative flex h-2 w-2">
@@ -146,6 +154,59 @@ export default function Landing() {
           <MapPin className="h-4 w-4" />
           Disponible Exclusivement à El Jadida.
         </p>
+      </section>
+
+      <section className="pb-16 px-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 text-left">
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 mb-3">Spécialités</h3>
+            <ul className="space-y-1.5">
+              {SPECIALTIES_DATA.slice(0, 5).map(s => (
+                <li key={s.slug}>
+                  <a href={`/${slugifyCity(DEFAULT_CITY)}/${s.slug}`} className="text-xs text-slate-400 hover:text-blue-600 transition-colors">{s.name} {DEFAULT_CITY}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 mb-3">Spécialités</h3>
+            <ul className="space-y-1.5">
+              {SPECIALTIES_DATA.slice(5).map(s => (
+                <li key={s.slug}>
+                  <a href={`/${slugifyCity(DEFAULT_CITY)}/${s.slug}`} className="text-xs text-slate-400 hover:text-blue-600 transition-colors">{s.name} {DEFAULT_CITY}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 mb-3">Villes</h3>
+            <ul className="space-y-1.5">
+              {CITIES.slice(0, 5).map(c => (
+                <li key={c.slug}>
+                  <a href={`/${c.slug}/medecine-generale`} className="text-xs text-slate-400 hover:text-blue-600 transition-colors">Médecins à {c.name}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 mb-3">Villes</h3>
+            <ul className="space-y-1.5">
+              {CITIES.slice(5, 10).map(c => (
+                <li key={c.slug}>
+                  <a href={`/${c.slug}/medecine-generale`} className="text-xs text-slate-400 hover:text-blue-600 transition-colors">Médecins à {c.name}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 mb-3">SafirMed</h3>
+            <ul className="space-y-1.5">
+              <li><a href="/search" className="text-xs text-slate-400 hover:text-blue-600 transition-colors">Recherche</a></li>
+              <li><a href="/signin" className="text-xs text-slate-400 hover:text-blue-600 transition-colors">Connexion</a></li>
+              <li><a href="/signup" className="text-xs text-slate-400 hover:text-blue-600 transition-colors">Inscription</a></li>
+            </ul>
+          </div>
+        </div>
       </section>
     </div>
   );

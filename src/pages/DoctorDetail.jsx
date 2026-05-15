@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, MapPin, Phone, CalendarCheck } from "lucide-react";
 import { convertToEmbedUrl } from "@/lib/mapsConverter";
 import * as XLSX from 'xlsx';
+import SEOHead from '@/components/seo/SEOHead';
+import { buildPhysicianJsonld, buildMedicalClinicJsonld } from '@/seo/jsonld';
 
 export default function DoctorDetail() {
     const { id } = useParams();
@@ -106,8 +108,30 @@ export default function DoctorDetail() {
         </div>
     );
 
+    const physicianJsonld = buildPhysicianJsonld({
+      name: doctor.Nom,
+      specialty: doctor.Spécialité,
+      city: doctor.Ville,
+      address: doctor.Adresse,
+      phone: doctor.Téléphone,
+    });
+
+    const clinicJsonld = buildMedicalClinicJsonld({
+      name: doctor.Nom,
+      specialty: doctor.Spécialité,
+      city: doctor.Ville,
+      address: doctor.Adresse,
+      phone: doctor.Téléphone,
+    });
+
     return (
         <>
+            <SEOHead
+              title={`Dr. ${doctor.Nom} – ${doctor.Spécialité} à ${doctor.Ville}`}
+              description={`Prenez rendez-vous avec le Dr. ${doctor.Nom}, ${doctor.Spécialité} à ${doctor.Ville}. Téléphone: ${doctor.Téléphone}. Adresse: ${doctor.Adresse}.`}
+              canonical={`/doctor/${doctor.ID}`}
+              jsonld={[physicianJsonld, clinicJsonld]}
+            />
             <div className="bg-white border-b border-slate-100 px-6 py-6 sticky top-0 z-40 shadow-sm/50 -mx-6">
                 <div className="max-w-4xl mx-auto flex items-center cursor-pointer group w-fit" onClick={() => navigate(-1)}>
                     <div className="h-10 w-10 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-slate-100 transition-colors mr-4">

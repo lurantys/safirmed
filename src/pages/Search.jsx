@@ -11,6 +11,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DEFAULT_CITY, SPECIALTIES } from "@/constants";
 import { convertToEmbedUrl } from "@/lib/mapsConverter";
 import * as XLSX from 'xlsx';
+import SEOHead from '@/components/seo/SEOHead';
 
 export default function SearchPage() {
   const navigate = useNavigate();
@@ -111,6 +112,12 @@ export default function SearchPage() {
 
   return (
     <div className="max-w-5xl mx-auto pt-16">
+      <SEOHead
+        title={`Recherche${searchQuery ? ` : ${searchQuery}` : ''} – Médecins au Maroc`}
+        description={`Trouvez un médecin${searchQuery ? ` spécialiste en ${searchQuery}` : ''} à ${selectedCity}. Consultez les horaires, adresses et prenez rendez-vous.`}
+        canonical="/search"
+        robots="index, follow"
+      />
       <section className="pt-24 pb-8 flex flex-col items-center text-center">
         <div className="w-full max-w-4xl mx-auto mb-2">
           <div className="flex flex-col sm:flex-row sm:items-center bg-white rounded-3xl sm:rounded-full p-2 shadow-xl shadow-slate-200/50 border border-slate-100 transition-all duration-300 hover:shadow-2xl hover:shadow-slate-200/60 gap-2 sm:gap-0">
