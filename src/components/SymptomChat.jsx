@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, SendHorizonal, Stethoscope, ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { matchSpecialty, getSpecialtyDescription } from '@/utils/symptomMatcher';
+import { getSpecialtyDescription } from '@/utils/symptomMatcher';
 import { matchSpecialtyWithAI } from '@/utils/aiMatcher';
 import { DEFAULT_CITY } from "@/constants";
 
@@ -43,11 +43,11 @@ export default function SymptomChat({ onBack }) {
 
   const analyzeSymptoms = async (text) => {
     setLoading(true);
-    const specialty = await matchSpecialtyWithAI(text) || matchSpecialty(text);
+    const specialty = await matchSpecialtyWithAI(text);
     if (specialty) {
       addMessage('bot', `D'après vos symptômes, je vous recommande de consulter un **${specialty}**.`, specialty);
     } else {
-      addMessage('bot', "Je n'ai pas pu identifier clairement vos symptômes. Je vous recommande de consulter un médecin généraliste qui pourra vous orienter.", "Médecine Générale");
+      addMessage('bot', "Je n'ai pas pu analyser vos symptômes pour le moment. Veuillez réessayer ou utiliser la recherche par spécialité.");
     }
     setLoading(false);
   };
