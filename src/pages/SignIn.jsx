@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { signInWithEmailAndPassword, signInWithRedirect } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Lock, Loader2 } from "lucide-react";
@@ -40,15 +40,25 @@ export default function SignIn() {
     }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setProcessing(true);
-    sessionStorage.setItem('googleRedirect', 'true');
     try {
-      signInWithRedirect(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider);
     } catch (err) {
-      console.error('Erreur redirection Google:', err);
-      setProcessing(false);
-      setError('Erreur lors de la redirection Google.');
+      if (err.code === 'auth/popup-blocked') {
+        sessionStorage.setItem('googleRedirect', 'true');
+        signInWithRedirect(auth, googleProvider).catch((e) => {
+          console.error('Erreur redirection Google:', e);
+          setProcessing(false);
+          setError('Erreur lors de la redirection Google.');
+        });
+      } else if (err.code !== 'auth/popup-closed-by-user') {
+        console.error('Erreur popup Google:', err);
+        setProcessing(false);
+        setError('Erreur de connexion Google.');
+      } else {
+        setProcessing(false);
+      }
     }
   };
 
