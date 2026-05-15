@@ -1,4 +1,3 @@
-const PLACES_API = 'https://places.googleapis.com/v1/places';
 const API_KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.VITE_GOOGLE_PLACES_API_KEY || '';
 
 function extractPlaceId(mapsUrl) {
@@ -7,20 +6,25 @@ function extractPlaceId(mapsUrl) {
   return m ? m[1] : null;
 }
 
-export async function fetchRating(placeId) {
+async function fetchRating(placeId) {
   if (!API_KEY) return null;
   try {
-    const url = `${PLACES_API}/${encodeURIComponent(placeId)}?fields=rating,userRatingCount&language=fr&key=${API_KEY}`;
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&key=${API_KEY}&language=fr&fields=rating,user_ratings_total`;
     const res = await fetch(url);
     if (!res.ok) {
-      if (res.status === 404) return null;
       const text = await res.text();
       console.warn(`  Places API error ${res.status}: ${text.slice(0, 100)}`);
       return null;
     }
     const data = await res.json();
-    if (data.rating && data.rating >= 1 && data.rating <= 5) {
-      return { rating: data.rating, count: data.userRatingCount || 0 };
+    if (data.status !== 'OK') {
+      if (data.status !== 'NOT_FOUND' && data.status !== 'ZERO_RESULTS') {
+        console.warn(`  Places API status ${data.status}: ${data.error_message || ''}`);
+      }
+      return null;
+    }
+    if (data.result?.rating && data.result.rating >= 1 && data.result.rating <= 5) {
+      return { rating: data.result.rating, count: data.result.user_ratings_total || 0 };
     }
     return null;
   } catch (err) {
@@ -29,4 +33,4 @@ export async function fetchRating(placeId) {
   }
 }
 
-export { extractPlaceId, API_KEY };
+export { fetchRating, extractPlaceId, API_KEY };
