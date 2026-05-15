@@ -79,16 +79,21 @@ function resolveEmbedUrl(mapsUrl, fallbackName, fallbackAddress = '') {
     return toEmbedUrlFromCoords(directCoords);
   }
 
-  // Try to extract place_id
-  const placeIdMatch = mapsUrl.match(/place_id:([A-Za-z0-9_-]+)/i);
-  if (placeIdMatch?.[1]) {
-    return `https://maps.google.com/maps?q=place_id:${placeIdMatch[1]}&output=embed`;
+  // Try to extract place_id — NOT supported in basic iframe embed, skip to fallback
+  // const placeIdMatch = mapsUrl.match(/place_id:([A-Za-z0-9_-]+)/i);
+  // if (placeIdMatch?.[1]) {
+  //   return `https://maps.google.com/maps?q=place_id:${placeIdMatch[1]}&output=embed`;
+  // }
+
+  // Fall back to place name or name+address
+  const placeName = extractPlaceName(mapsUrl);
+  if (placeName) {
+    return toEmbedUrlFromPlaceName(placeName);
   }
 
-  // Fall back to place name
-  const fallbackPlaceName = extractPlaceName(mapsUrl) || fallbackName;
-  if (fallbackPlaceName) {
-    return toEmbedUrlFromPlaceName(fallbackPlaceName);
+  const searchQuery = [fallbackName, fallbackAddress].filter(Boolean).join(', ');
+  if (searchQuery) {
+    return toEmbedUrlFromPlaceName(searchQuery);
   }
 
   return '';
