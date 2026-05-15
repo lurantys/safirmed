@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Markdown from 'react-markdown';
-import { MessageCircle, SendHorizonal, Stethoscope, ArrowLeft, Sparkles } from "lucide-react";
+import { MessageCircle, SendHorizonal, Stethoscope, ArrowLeft, Sparkles, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSpecialtyDescription } from '@/utils/symptomMatcher';
 import { matchSpecialtyWithAI } from '@/utils/aiMatcher';
@@ -55,11 +55,7 @@ export default function SymptomChat({ onBack }) {
   };
 
   const handleSend = () => {
-    const text = input.trim();
-    if (!text || loading) return;
-    setInput('');
-    addMessage('user', text);
-    analyzeSymptoms(text);
+    handleSendWithText(input);
   };
 
   const handleKeyDown = (e) => {
@@ -80,6 +76,81 @@ export default function SymptomChat({ onBack }) {
     setInput('');
     setLoading(false);
   };
+
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+  const sendFnRef = useRef(null);
+
+  const handleSendWithText = useCallback((text) => {
+    const trimmed = text.trim();
+    if (!trimmed || loading) return;
+    setInput('');
+    addMessage('user', trimmed);
+    analyzeSymptoms(trimmed);
+  }, [loading]);
+
+  sendFnRef.current = handleSendWithText;
+
+  const startListening = useCallback(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("La reconnaissance vocale n'est pas supportée par votre navigateur. Utilisez Chrome ou Edge.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'fr-FR';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map(r => r[0].transcript)
+        .join('');
+      setInput(transcript);
+
+      if (event.results[event.results.length - 1].isFinal) {
+        setIsListening(false);
+        setTimeout(() => sendFnRef.current?.(transcript), 300);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.warn('[Voice] error:', event.error);
+      setIsListening(false);
+      if (event.error === 'not-allowed') {
+        alert("Veuillez autoriser l'accès au microphone dans les paramètres de votre navigateur.");
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  }, []);
+
+  const stopListening = useCallback(() => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+    };
+  }, []);
 
   const lastMessage = messages[messages.length - 1];
   const hasResult = lastMessage?.role === 'bot' && lastMessage?.specialty;
@@ -168,20 +239,32 @@ export default function SymptomChat({ onBack }) {
             Nouvelle analyse
           </Button>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              onClick={toggleListening}
+              disabled={loading}
+              className={`rounded-xl h-11 w-11 flex items-center justify-center shrink-0 transition-all ${
+                isListening
+                  ? 'bg-red-500 text-white shadow-lg shadow-red-200 animate-pulse'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-500'
+              } disabled:opacity-50`}
+              title={isListening ? "Arrêter l'enregistrement" : "Dicter vos symptômes"}
+            >
+              <Mic className={`h-5 w-5 ${isListening ? 'animate-bounce' : ''}`} />
+            </button>
             <input
               ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Décrivez vos symptômes..."
-              disabled={loading}
+              placeholder={isListening ? "Écoute..." : "Décrivez vos symptômes..."}
+              disabled={loading || isListening}
               className="flex-1 bg-slate-50 rounded-xl px-3.5 sm:px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all disabled:opacity-50 min-w-0"
             />
             <Button
               onClick={handleSend}
-              disabled={!input.trim() || loading}
+              disabled={!input.trim() || loading || isListening}
               size="icon"
               className="rounded-xl h-11 w-11 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 shrink-0"
             >
