@@ -62,8 +62,9 @@ export default function SignUp() {
       await createAccount(cred, extra);
       navigate('/');
     } catch (err) {
+      console.error('Google sign-up error:', err.code, err.message);
       if (err.code !== 'auth/popup-closed-by-user') {
-        setError('Erreur lors de l\'inscription avec Google.');
+        setError(`Erreur: ${err.code}`);
       }
     } finally {
       setSubmitting(false);

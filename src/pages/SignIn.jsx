@@ -31,8 +31,9 @@ export default function SignIn() {
       await signInWithPopup(auth, googleProvider);
       navigate('/');
     } catch (err) {
+      console.error('Google sign-in error:', err.code, err.message);
       if (err.code !== 'auth/popup-closed-by-user') {
-        setError('Erreur de connexion avec Google.');
+        setError(`Erreur: ${err.code}`);
       }
     }
   };
