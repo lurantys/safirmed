@@ -8,7 +8,7 @@
     "predev": "npm run generate:cabinets",
     "dev": "vite",
     "prebuild": "npm run generate:cabinets",
-    "build": "npm run generate:cabinets && node scripts/generate-sitemap.mjs && vite build",
+    "build": "npm run generate:cabinets && node scripts/generate-sitemap.mjs && node scripts/fetchRatings.mjs && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

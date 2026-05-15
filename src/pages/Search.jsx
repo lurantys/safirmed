@@ -9,9 +9,8 @@ import {
 } from "lucide-react";
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DEFAULT_CITY, SPECIALTIES } from "@/constants";
-import { convertToEmbedUrl } from "@/lib/mapsConverter";
-import * as XLSX from 'xlsx';
 import SEOHead from '@/components/seo/SEOHead';
+import RatingStars from '@/components/RatingStars';
 
 export default function SearchPage() {
   const navigate = useNavigate();
@@ -42,60 +41,11 @@ export default function SearchPage() {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await fetch('/cabinets_eljadida.xlsx');
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-
-        let headerRow = 0;
-        let headers = {};
-        const range = XLSX.utils.decode_range(worksheet['!ref']);
-
-        for (let R = 0; R <= Math.min(5, range.e.r); R++) {
-          const rowHeaders = {};
-          for (let C = 0; C <= range.e.c; C++) {
-            const cell = worksheet[XLSX.utils.encode_cell({ c: C, r: R })];
-            if (cell?.v) {
-              rowHeaders[String(cell.v).trim()] = C;
-            }
-          }
-          if (Object.keys(rowHeaders).length > 3) {
-            headerRow = R;
-            headers = rowHeaders;
-            break;
-          }
-        }
-
-        const mappedDoctors = [];
-        for (let R = headerRow + 1; R <= range.e.r; R++) {
-          const nameCell = worksheet[XLSX.utils.encode_cell({ c: headers['Nom du Cabinet / Médecin'] ?? 1, r: R })];
-          if (!nameCell?.v) continue;
-
-          const specCell = worksheet[XLSX.utils.encode_cell({ c: headers['Spécialité'] ?? 0, r: R })];
-          const phoneCell = worksheet[XLSX.utils.encode_cell({ c: headers['Téléphone'] ?? 2, r: R })];
-          const addrCell = worksheet[XLSX.utils.encode_cell({ c: headers['Adresse'] ?? 3, r: R })];
-          const linkCell = worksheet[XLSX.utils.encode_cell({ c: headers['Lien Google Maps'] ?? 4, r: R })];
-
-          const nameVal = nameCell?.v ? String(nameCell.v).trim() : '';
-          const addrVal = addrCell?.v ? String(addrCell.v).trim() : '';
-          const mapsUrl = (linkCell?.l?.Target || linkCell?.v || '').toString().trim();
-          const embedUrl = convertToEmbedUrl(mapsUrl, nameVal, addrVal);
-
-          mappedDoctors.push({
-            ID: String(mappedDoctors.length + 1),
-            Nom: nameVal,
-            Spécialité: specCell?.v ? String(specCell.v).trim() : '',
-            Téléphone: phoneCell?.v ? String(phoneCell.v).trim() : '',
-            Adresse: addrVal,
-            Ville: 'El Jadida',
-            mapsUrl,
-            embedUrl
-          });
-        }
-
-        setDoctors(mappedDoctors);
+        const response = await fetch('/cabinets_resolved.json');
+        const data = await response.json();
+        setDoctors(data);
       } catch (error) {
-        console.error("Error loading doctors from XLSX:", error);
+        console.error("Error loading doctors:", error);
       }
     };
     fetchDoctors();
@@ -241,6 +191,7 @@ export default function SearchPage() {
                       {doc.Nom}
                     </h3>
                     <p className="text-blue-600 font-medium text-sm bg-blue-50 w-fit px-2 py-0.5 rounded-full">{doc.Spécialité}</p>
+                    <RatingStars rating={doc.rating} count={doc.ratingCount} />
                   </div>
                 </div>
 

@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, MapPin, Phone, CalendarCheck } from "lucide-react";
-import { convertToEmbedUrl } from "@/lib/mapsConverter";
-import * as XLSX from 'xlsx';
 import SEOHead from '@/components/seo/SEOHead';
+import RatingStars from '@/components/RatingStars';
 import { buildPhysicianJsonld, buildMedicalClinicJsonld } from '@/seo/jsonld';
 
 export default function DoctorDetail() {
@@ -16,77 +15,12 @@ export default function DoctorDetail() {
     useEffect(() => {
         const fetchDoctor = async () => {
             try {
-                const response = await fetch('/cabinets_eljadida.xlsx');
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-
-                let headerRow = 0;
-                let headers = {};
-                const range = XLSX.utils.decode_range(worksheet['!ref']);
-
-                for (let R = 0; R <= Math.min(5, range.e.r); R++) {
-                  const rowHeaders = {};
-                  for (let C = 0; C <= range.e.c; C++) {
-                    const cell = worksheet[XLSX.utils.encode_cell({ c: C, r: R })];
-                    if (cell?.v) {
-                      rowHeaders[String(cell.v).trim()] = C;
-                    }
-                  }
-                  if (Object.keys(rowHeaders).length > 3) {
-                    headerRow = R;
-                    headers = rowHeaders;
-                    break;
-                  }
-                }
-
-                let hoursJson = {};
-                try {
-                    const hoursRes = await fetch('/hours.json');
-                    hoursJson = await hoursRes.json();
-                } catch(e) {}
-
-                let found = null;
-                let currentId = 0;
-                for (let R = headerRow + 1; R <= range.e.r; R++) {
-                  const nameCell = worksheet[XLSX.utils.encode_cell({ c: headers['Nom du Cabinet / Médecin'] ?? 1, r: R })];
-                  if (!nameCell?.v) continue;
-
-                  currentId++;
-                  if (String(currentId) === String(id)) {
-                    const specCell = worksheet[XLSX.utils.encode_cell({ c: headers['Spécialité'] ?? 0, r: R })];
-                    const phoneCell = worksheet[XLSX.utils.encode_cell({ c: headers['Téléphone'] ?? 2, r: R })];
-                    const addrCell = worksheet[XLSX.utils.encode_cell({ c: headers['Adresse'] ?? 3, r: R })];
-                    const linkCell = worksheet[XLSX.utils.encode_cell({ c: headers['Lien Google Maps'] ?? 4, r: R })];
-
-                    const nameVal = nameCell?.v ? String(nameCell.v).trim() : '';
-                    const addrVal = addrCell?.v ? String(addrCell.v).trim() : '';
-                    const mapsUrl = (linkCell?.l?.Target || linkCell?.v || '').toString().trim();
-                    const embedUrl = convertToEmbedUrl(mapsUrl, nameVal, addrVal);
-
-                    const scrapedHours = hoursJson[currentId];
-                    const formattedHours = (scrapedHours && scrapedHours !== 'Non spécifié' && scrapedHours !== 'Erreur')
-                        ? scrapedHours.split(';').map(s => s.trim()).join('\\n')
-                        : 'Horaires non spécifiés';
-
-                    found = {
-                      ID: String(id),
-                      Nom: nameVal,
-                      Spécialité: specCell?.v ? String(specCell.v).trim() : '',
-                      Téléphone: phoneCell?.v ? String(phoneCell.v).trim() : '',
-                      Adresse: addrVal,
-                      Ville: 'El Jadida',
-                      Horaire: formattedHours,
-                      mapsUrl,
-                      embedUrl
-                    };
-                    break;
-                  }
-                }
-
+                const response = await fetch('/cabinets_resolved.json');
+                const data = await response.json();
+                const found = data.find(d => String(d.ID) === String(id)) || null;
                 setDoctor(found);
             } catch (error) {
-                console.error("Failed to fetch cabinet details:", error);
+                console.error("Failed to fetch doctor details:", error);
             } finally {
                 setLoading(false);
             }
@@ -151,7 +85,10 @@ export default function DoctorDetail() {
 
                     <div className="flex-1 w-full z-10 flex flex-col items-center sm:items-start">
                         <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3">{doctor.Nom}</h1>
-                        <p className="text-blue-600 font-semibold text-base sm:text-lg md:text-xl mb-6 sm:mb-8 bg-blue-50 w-fit px-4 py-1.5 rounded-full border border-blue-100 shadow-sm mx-auto sm:mx-0">{doctor.Spécialité}</p>
+                        <p className="text-blue-600 font-semibold text-base sm:text-lg md:text-xl mb-1 bg-blue-50 w-fit px-4 py-1.5 rounded-full border border-blue-100 shadow-sm mx-auto sm:mx-0">{doctor.Spécialité}</p>
+                        <div className="mb-6 sm:mb-8 mx-auto sm:mx-0">
+                          <RatingStars rating={doctor.rating} count={doctor.ratingCount} />
+                        </div>
 
                         <div className="grid sm:grid-cols-2 gap-y-4 sm:gap-y-5 gap-x-4 sm:gap-x-8 text-slate-600 font-medium text-sm sm:text-base bg-slate-50 p-4 sm:p-6 rounded-[1.5rem] border border-slate-200/60 w-full">
                             <div className="flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start gap-2 sm:gap-3 text-center sm:text-left">

@@ -6,6 +6,7 @@ import SEOHead from '@/components/seo/SEOHead';
 import Breadcrumbs from '@/components/seo/Breadcrumbs';
 import FAQSection from '@/components/seo/FAQSection';
 import RelatedLinks from '@/components/seo/RelatedLinks';
+import RatingStars from '@/components/RatingStars';
 import { cityBySlug } from '@/seo/cities';
 import { SPECIALTIES_DATA, specialtyBySlug } from '@/seo/specialties';
 import * as XLSX from 'xlsx';
@@ -112,6 +113,7 @@ export default function CitySpecialtyPage() {
                         {doc.Nom}
                       </h2>
                       <p className="text-blue-600 font-medium text-sm bg-blue-50 w-fit px-2 py-0.5 rounded-full">{doc.Spécialité}</p>
+                      <RatingStars rating={doc.rating} count={doc.ratingCount} />
                     </div>
                   </div>
                   <div className="space-y-2 text-sm text-slate-500 font-medium mb-4 flex-1">
