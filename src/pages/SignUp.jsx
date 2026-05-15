@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { createUserWithEmailAndPassword, signInWithRedirect } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Lock, User, Phone, Stethoscope, Check, Loader2, ArrowLeft } from "lucide-react";
@@ -24,57 +24,10 @@ export default function SignUp() {
   const [specialty, setSpecialty] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [creatingProfile, setCreatingProfile] = useState(false);
 
   useEffect(() => {
-    const pendingRole = sessionStorage.getItem('signupRole');
-    if (user && pendingRole && !creatingProfile) {
-      setCreatingProfile(true);
-      const createProfile = async () => {
-        const savedName = sessionStorage.getItem('signupName') || user.displayName || '';
-        const savedPhone = sessionStorage.getItem('signupPhone') || user.phoneNumber || '';
-        const savedSpecialty = sessionStorage.getItem('signupSpecialty') || '';
-        try {
-          const existing = await getDoc(doc(db, 'users', user.uid));
-          if (!existing.exists()) {
-            await setDoc(doc(db, 'users', user.uid), {
-              role: pendingRole,
-              name: savedName,
-              email: user.email,
-              phone: savedPhone,
-              ...(pendingRole === 'doctor' ? { specialty: savedSpecialty } : {}),
-              createdAt: new Date().toISOString(),
-            });
-          }
-        } catch (e) {
-          console.error('Profile creation error:', e);
-        }
-        sessionStorage.removeItem('signupRole');
-        sessionStorage.removeItem('signupName');
-        sessionStorage.removeItem('signupPhone');
-        sessionStorage.removeItem('signupSpecialty');
-        navigate('/');
-      };
-      createProfile();
-    }
-  }, [user, navigate, creatingProfile]);
-
-  useEffect(() => {
-    if (!authLoading && user && !sessionStorage.getItem('signupRole')) {
-      navigate('/');
-    }
+    if (!authLoading && user) navigate('/');
   }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      sessionStorage.removeItem('signupRole');
-      sessionStorage.removeItem('signupName');
-      sessionStorage.removeItem('signupPhone');
-      sessionStorage.removeItem('signupSpecialty');
-    }
-  }, [user, authLoading]);
-
-  const redirectFailed = !authLoading && !user && !!sessionStorage.getItem('signupRole');
 
   const handleEmailSignUp = async (e) => {
     e.preventDefault();
@@ -98,19 +51,27 @@ export default function SignUp() {
     }
   };
 
-  const handleGoogleSignUp = () => {
+  const handleGoogleSignUp = async () => {
     if (!role) return;
-    sessionStorage.setItem('signupRole', role);
-    sessionStorage.setItem('signupName', name);
-    sessionStorage.setItem('signupPhone', phone);
-    sessionStorage.setItem('signupSpecialty', specialty);
     setSubmitting(true);
     try {
-      signInWithRedirect(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      await setDoc(doc(db, 'users', result.user.uid), {
+        role,
+        name,
+        email: result.user.email,
+        phone,
+        ...(role === 'doctor' ? { specialty } : {}),
+        createdAt: new Date().toISOString(),
+      });
     } catch (err) {
-      console.error('Erreur redirection Google:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setSubmitting(false);
+        return;
+      }
+      console.error('Erreur popup Google:', err);
       setSubmitting(false);
-      setError('Erreur lors de la redirection Google. Veuillez réessayer.');
+      setError('Erreur de connexion Google.');
     }
   };
 
@@ -124,18 +85,7 @@ export default function SignUp() {
     );
   }
 
-  if (user && !sessionStorage.getItem('signupRole')) return null;
-
-  if (creatingProfile) {
-    return (
-      <div className="max-w-md mx-auto pt-24">
-        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100 flex flex-col items-center justify-center min-h-[300px] gap-4">
-          <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
-          <p className="text-slate-500 font-medium">Création de votre compte...</p>
-        </div>
-      </div>
-    );
-  }
+  if (user) return null;
 
   return (
     <div className="max-w-md mx-auto pt-24 pb-12">
@@ -143,9 +93,9 @@ export default function SignUp() {
         <h1 className="text-3xl font-extrabold text-slate-900 text-center mb-2">Inscription</h1>
         <p className="text-slate-500 text-center mb-8">Créez votre compte SafirMed</p>
 
-        {(error || redirectFailed) && (
+        {error && (
           <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3 mb-6 border border-red-100">
-            {error || 'La connexion Google a échoué. Veuillez réessayer ou utiliser l\'email/mot de passe.'}
+            {error}
           </div>
         )}
 

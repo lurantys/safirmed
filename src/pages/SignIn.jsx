@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { signInWithEmailAndPassword, signInWithRedirect } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Lock, Loader2 } from "lucide-react";
@@ -18,14 +18,6 @@ export default function SignIn() {
     if (!authLoading && user) navigate('/');
   }, [user, authLoading, navigate]);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      sessionStorage.removeItem('googleRedirect');
-    }
-  }, [user, authLoading]);
-
-  const redirectFailed = !authLoading && !user && !!sessionStorage.getItem('googleRedirect');
-
   const handleEmailSignIn = async (e) => {
     e.preventDefault();
     setError('');
@@ -40,15 +32,18 @@ export default function SignIn() {
     }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setProcessing(true);
-    sessionStorage.setItem('googleRedirect', 'true');
     try {
-      signInWithRedirect(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider);
     } catch (err) {
-      console.error('Erreur redirection Google:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setProcessing(false);
+        return;
+      }
+      console.error('Erreur popup Google:', err);
       setProcessing(false);
-      setError('Erreur lors de la redirection Google.');
+      setError('Erreur de connexion Google.');
     }
   };
 
@@ -70,9 +65,9 @@ export default function SignIn() {
         <h1 className="text-3xl font-extrabold text-slate-900 text-center mb-2">Connexion</h1>
         <p className="text-slate-500 text-center mb-8">Connectez-vous à votre compte SafirMed</p>
 
-        {(error || redirectFailed) && (
+        {error && (
           <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-3 mb-6 border border-red-100">
-            {error || 'La connexion Google a échoué. Veuillez réessayer.'}
+            {error}
           </div>
         )}
 
