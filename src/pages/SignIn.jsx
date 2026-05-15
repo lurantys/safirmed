@@ -1,22 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { signInWithEmailAndPassword, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithRedirect } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Lock } from "lucide-react";
 
 export default function SignIn() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    getRedirectResult(auth).then((result) => {
-      if (result) navigate('/');
-    });
-  }, [navigate]);
+    if (user) navigate('/');
+  }, [user, navigate]);
 
   const handleEmailSignIn = async (e) => {
     e.preventDefault();
@@ -24,11 +24,8 @@ export default function SignIn() {
     setProcessing(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/');
     } catch (err) {
-      if (err.code === 'auth/user-not-found') setError('Aucun compte trouvé avec cet email');
-      else if (err.code === 'auth/wrong-password') setError('Mot de passe incorrect');
-      else if (err.code === 'auth/invalid-credential') setError('Email ou mot de passe incorrect');
+      if (err.code === 'auth/invalid-credential') setError('Email ou mot de passe incorrect');
       else setError('Erreur de connexion. Veuillez réessayer.');
     } finally {
       setProcessing(false);

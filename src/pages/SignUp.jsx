@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { createUserWithEmailAndPassword, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithRedirect } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from '@/lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Lock, User, Phone, Stethoscope, Check } from "lucide-react";
 
 const ROLES = [
@@ -13,6 +14,7 @@ const ROLES = [
 
 export default function SignUp() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [role, setRole] = useState('');
   const [email, setEmail] = useState('');
@@ -24,34 +26,36 @@ export default function SignUp() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    getRedirectResult(auth).then(async (result) => {
-      if (!result) return;
-      const savedRole = sessionStorage.getItem('signupRole') || 'patient';
-      const savedName = sessionStorage.getItem('signupName') || result.user.displayName || '';
-      const savedPhone = sessionStorage.getItem('signupPhone') || result.user.phoneNumber || '';
-      const savedSpecialty = sessionStorage.getItem('signupSpecialty') || '';
-      try {
-        const existing = await getDoc(doc(db, 'users', result.user.uid));
-        if (!existing.exists()) {
-          await setDoc(doc(db, 'users', result.user.uid), {
-            role: savedRole,
-            name: savedName,
-            email: result.user.email,
-            phone: savedPhone,
-            ...(savedRole === 'doctor' ? { specialty: savedSpecialty } : {}),
-            createdAt: new Date().toISOString(),
-          });
+    const pendingRole = sessionStorage.getItem('signupRole');
+    if (user && pendingRole) {
+      const createProfile = async () => {
+        const savedName = sessionStorage.getItem('signupName') || user.displayName || '';
+        const savedPhone = sessionStorage.getItem('signupPhone') || user.phoneNumber || '';
+        const savedSpecialty = sessionStorage.getItem('signupSpecialty') || '';
+        try {
+          const existing = await getDoc(doc(db, 'users', user.uid));
+          if (!existing.exists()) {
+            await setDoc(doc(db, 'users', user.uid), {
+              role: pendingRole,
+              name: savedName,
+              email: user.email,
+              phone: savedPhone,
+              ...(pendingRole === 'doctor' ? { specialty: savedSpecialty } : {}),
+              createdAt: new Date().toISOString(),
+            });
+          }
+        } catch (e) {
+          console.error('Profile creation error:', e);
         }
-      } catch (e) {
-        console.error('Failed to save profile after redirect:', e);
-      }
-      sessionStorage.removeItem('signupRole');
-      sessionStorage.removeItem('signupName');
-      sessionStorage.removeItem('signupPhone');
-      sessionStorage.removeItem('signupSpecialty');
-      navigate('/');
-    });
-  }, [navigate]);
+        sessionStorage.removeItem('signupRole');
+        sessionStorage.removeItem('signupName');
+        sessionStorage.removeItem('signupPhone');
+        sessionStorage.removeItem('signupSpecialty');
+        navigate('/');
+      };
+      createProfile();
+    }
+  }, [user, navigate]);
 
   const handleEmailSignUp = async (e) => {
     e.preventDefault();
