@@ -30,14 +30,14 @@ Symptômes du patient : "${symptoms}"`;
       chatRequest: {
         model: 'openrouter/free',
         messages: [{ role: 'user', content: prompt }],
-        maxTokens: 50,
+        maxTokens: 100,
         temperature: 0,
         stream: false,
       },
     });
 
     if ('choices' in response && response.choices?.[0]?.message?.content) {
-      const specialty = response.choices[0].message.content.trim();
+      const specialty = response.choices[0].message.content.replace(/[.\s]+$/, '').trim();
       if (SPECIALTIES_LIST.includes(specialty)) {
         return specialty;
       }
