@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Markdown from 'react-markdown';
 import { MessageCircle, SendHorizonal, Stethoscope, ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSpecialtyDescription } from '@/utils/symptomMatcher';
@@ -115,7 +116,7 @@ export default function SymptomChat({ onBack }) {
             }`}>
               {msg.role === 'bot' && msg.specialty ? (
                 <div className="space-y-3">
-                  <p className="text-sm leading-relaxed">{msg.text}</p>
+                  <Markdown className="text-sm leading-relaxed [&_strong]:font-semibold">{msg.text}</Markdown>
                   <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
                     <div className="flex items-start gap-3">
                       <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
