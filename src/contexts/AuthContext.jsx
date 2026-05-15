@@ -14,8 +14,12 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
-        const docSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
-        setProfile(docSnap.exists() ? docSnap.data() : null);
+        try {
+          const docSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
+          setProfile(docSnap.exists() ? docSnap.data() : null);
+        } catch {
+          setProfile(null);
+        }
       } else {
         setProfile(null);
       }
