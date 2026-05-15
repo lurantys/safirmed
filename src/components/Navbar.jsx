@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, ArrowUpRight, LogOut, User } from "lucide-react";
+import { Menu, LogOut, User, Loader2 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -7,11 +8,17 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function Navbar({ isScrolled = false }) {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    await signOut(auth);
-    navigate('/');
+    setLoggingOut(true);
+    try {
+      await signOut(auth);
+      navigate('/');
+    } catch {
+      setLoggingOut(false);
+    }
   };
 
   return (
@@ -30,7 +37,12 @@ export default function Navbar({ isScrolled = false }) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {user ? (
+          {loading ? (
+            <div className="flex items-center gap-3 px-4 py-2">
+              <div className="h-5 w-20 bg-slate-200 rounded-full animate-pulse hidden sm:block" />
+              <div className="h-9 w-20 bg-slate-200 rounded-full animate-pulse" />
+            </div>
+          ) : user ? (
             <>
               <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 text-sm font-medium">
                 <User className="h-4 w-4" />
@@ -38,10 +50,11 @@ export default function Navbar({ isScrolled = false }) {
               </div>
               <Button
                 onClick={handleLogout}
+                disabled={loggingOut}
                 variant="ghost"
-                className="rounded-full text-slate-600 hover:text-red-600 hover:bg-red-50"
+                className="rounded-full text-slate-600 hover:text-red-600 hover:bg-red-50 disabled:opacity-50"
               >
-                <LogOut className="h-5 w-5" />
+                {loggingOut ? <Loader2 className="h-5 w-5 animate-spin" /> : <LogOut className="h-5 w-5" />}
               </Button>
             </>
           ) : (
