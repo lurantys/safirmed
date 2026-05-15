@@ -27,12 +27,7 @@ export default function SymptomChat({ onBack }) {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const chatEndRef = useRef(null);
   const inputRef = useRef(null);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -156,7 +151,7 @@ export default function SymptomChat({ onBack }) {
   const hasResult = lastMessage?.role === 'bot' && lastMessage?.specialty;
 
   return (
-    <div className="flex flex-col bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden" style={{ maxHeight: '70vh' }}>
+    <div className="flex flex-col bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden" style={{ height: '520px' }}>
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 shrink-0">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {onBack && (
@@ -178,7 +173,7 @@ export default function SymptomChat({ onBack }) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-4 min-h-0" style={{ scrollBehavior: 'smooth' }}>
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-4 min-h-0">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] sm:max-w-[80%] ${msg.role === 'user'
@@ -226,7 +221,7 @@ export default function SymptomChat({ onBack }) {
           </div>
         )}
 
-        <div ref={chatEndRef} />
+
       </div>
 
       <div className="border-t border-slate-100 px-4 sm:px-6 py-3 sm:py-4 shrink-0">
