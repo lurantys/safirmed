@@ -80,30 +80,39 @@ function extractSpecialty(content) {
   return null;
 }
 
-async function fetchWithRetry(body, retries = 3) {
+async function fetchWithRetry(body, retries = 6) {
   for (let i = 0; i < retries; i++) {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '',
-      },
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '',
+        },
+        body: JSON.stringify(body),
+      });
 
-    if (res.ok) return res.json();
+      if (res.ok) return res.json();
 
-    if (res.status === 429 && i < retries - 1) {
-      const delay = (i + 1) * 2000;
-      console.warn(`[SymptomChat] rate limited, retrying in ${delay}ms (attempt ${i + 2}/${retries})`);
-      await new Promise(r => setTimeout(r, delay));
-      continue;
+      if (i < retries - 1) {
+        console.warn(`[SymptomChat] error ${res.status}, retry ${i + 2}/${retries} in 3s`);
+        await new Promise(r => setTimeout(r, 3000));
+        continue;
+      }
+
+      const text = await res.text().catch(() => '');
+      console.warn(`[SymptomChat] error ${res.status}:`, text.slice(0, 200));
+      return null;
+    } catch (err) {
+      if (i < retries - 1) {
+        console.warn(`[SymptomChat] network error, retry ${i + 2}/${retries} in 3s`);
+        await new Promise(r => setTimeout(r, 3000));
+        continue;
+      }
+      console.error('[SymptomChat] network error:', err);
+      return null;
     }
-
-    const text = await res.text().catch(() => '');
-    console.warn(`[SymptomChat] API error ${res.status}:`, text.slice(0, 200));
-    return null;
   }
   return null;
 }
