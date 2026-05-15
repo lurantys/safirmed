@@ -85,42 +85,42 @@ export default function SymptomChat({ onBack }) {
   const hasResult = lastMessage?.role === 'bot' && lastMessage?.specialty;
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-        <div className="flex items-center gap-3">
+    <div className="flex flex-col bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden" style={{ maxHeight: '70vh' }}>
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {onBack && (
-            <button onClick={onBack} className="p-1.5 -ml-1 hover:bg-slate-100 rounded-xl transition-colors">
+            <button onClick={onBack} className="p-1.5 -ml-1 hover:bg-slate-100 rounded-xl transition-colors shrink-0">
               <ArrowLeft className="h-5 w-5 text-slate-500" />
             </button>
           )}
-          <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center">
-            <MessageCircle className="h-5 w-5 text-blue-600" />
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
           </div>
-          <div>
-            <span className="font-semibold text-slate-800">Analyse des symptômes</span>
-            <p className="text-xs text-slate-400">Décrivez ce que vous ressentez</p>
+          <div className="min-w-0">
+            <span className="font-semibold text-slate-800 text-sm sm:text-base">Analyse des symptômes</span>
+            <p className="text-xs text-slate-400 truncate hidden sm:block">Décrivez ce que vous ressentez</p>
           </div>
-          <span className="flex items-center gap-1 text-[11px] bg-amber-50 text-amber-700 font-medium px-2 py-0.5 rounded-full border border-amber-200 ml-2">
+          <span className="flex items-center gap-1 text-[11px] bg-amber-50 text-amber-700 font-medium px-2 py-0.5 rounded-full border border-amber-200 shrink-0 ml-auto sm:ml-2">
             <Sparkles className="h-3 w-3" />
             IA
           </span>
         </div>
       </div>
 
-      <div className="h-[400px] overflow-y-auto px-6 py-5 space-y-4" style={{ scrollBehavior: 'smooth' }}>
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-4 min-h-0" style={{ scrollBehavior: 'smooth' }}>
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] ${msg.role === 'user'
-              ? 'bg-blue-600 text-white rounded-2xl rounded-tr-md px-4 py-3'
-              : 'bg-slate-50 text-slate-800 rounded-2xl rounded-tl-md px-4 py-3'
+            <div className={`max-w-[85%] sm:max-w-[80%] ${msg.role === 'user'
+              ? 'bg-blue-600 text-white rounded-2xl rounded-tr-md px-3.5 sm:px-4 py-2.5 sm:py-3'
+              : 'bg-slate-50 text-slate-800 rounded-2xl rounded-tl-md px-3.5 sm:px-4 py-2.5 sm:py-3'
             }`}>
               {msg.role === 'bot' && msg.specialty ? (
                 <div className="space-y-3">
                   <Markdown className="text-sm leading-relaxed [&_strong]:font-semibold">{msg.text}</Markdown>
-                  <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                    <div className="flex items-start gap-3">
-                      <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                        <Stethoscope className="h-5 w-5 text-blue-600" />
+                  <div className="bg-white rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                        <Stethoscope className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-slate-900 text-sm">{msg.specialty}</p>
@@ -158,8 +158,16 @@ export default function SymptomChat({ onBack }) {
         <div ref={chatEndRef} />
       </div>
 
-      {!hasResult && (
-        <div className="border-t border-slate-100 px-6 py-4">
+      <div className="border-t border-slate-100 px-4 sm:px-6 py-3 sm:py-4 shrink-0">
+        {hasResult ? (
+          <Button
+            onClick={handleNewAnalysis}
+            variant="outline"
+            className="w-full rounded-xl text-sm font-medium h-11 border-slate-300 text-slate-600 hover:text-slate-900"
+          >
+            Nouvelle analyse
+          </Button>
+        ) : (
           <div className="flex items-center gap-2">
             <input
               ref={inputRef}
@@ -169,7 +177,7 @@ export default function SymptomChat({ onBack }) {
               onKeyDown={handleKeyDown}
               placeholder="Décrivez vos symptômes..."
               disabled={loading}
-              className="flex-1 bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all disabled:opacity-50"
+              className="flex-1 bg-slate-50 rounded-xl px-3.5 sm:px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all disabled:opacity-50 min-w-0"
             />
             <Button
               onClick={handleSend}
@@ -180,20 +188,8 @@ export default function SymptomChat({ onBack }) {
               <SendHorizonal className="h-5 w-5" />
             </Button>
           </div>
-        </div>
-      )}
-
-      {hasResult && (
-        <div className="border-t border-slate-100 px-6 py-4">
-          <Button
-            onClick={handleNewAnalysis}
-            variant="outline"
-            className="w-full rounded-xl text-sm font-medium h-11 border-slate-300 text-slate-600 hover:text-slate-900"
-          >
-            Nouvelle analyse
-          </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
