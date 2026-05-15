@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Phone } from "lucide-react";
 import SEOHead from '@/components/seo/SEOHead';
 import Breadcrumbs from '@/components/seo/Breadcrumbs';
 import FAQSection from '@/components/seo/FAQSection';
 import RelatedLinks from '@/components/seo/RelatedLinks';
-import { cityBySlug, CITIES, slugifyCity } from '@/seo/cities';
-import { SPECIALTIES_DATA, specialtyBySlug, slugifySpecialty } from '@/seo/specialties';
+import { cityBySlug } from '@/seo/cities';
+import { SPECIALTIES_DATA, specialtyBySlug } from '@/seo/specialties';
 import * as XLSX from 'xlsx';
 
 export default function CitySpecialtyPage() {
@@ -43,8 +43,7 @@ export default function CitySpecialtyPage() {
     fetchDoctors();
   }, [cityName, specialtyName]);
 
-  const relatedSpecialties = SPECIALTIES_DATA.filter(s => s.slug !== specialtySlug).slice(0, 5);
-  const relatedCities = CITIES.filter(c => c.slug !== citySlug).slice(0, 5);
+  const relatedSpecialties = SPECIALTIES_DATA.filter(s => s.slug !== specialtySlug);
 
   const faqItems = [
     { question: `Comment prendre rendez-vous avec un ${specialtyName.toLowerCase()} à ${cityName} ?`, answer: `Vous pouvez consulter la liste des médecins ${specialtyName.toLowerCase()} à ${cityName} ci-dessus, puis les contacter directement par téléphone ou WhatsApp pour prendre rendez-vous.` },
@@ -145,13 +144,7 @@ export default function CitySpecialtyPage() {
               path: `/${citySlug}/${s.slug}`,
             }))}
           />
-          <RelatedLinks
-            title={`${specialtyName} dans d'autres villes`}
-            links={relatedCities.map(c => ({
-              name: `${specialtyName} à ${c.name}`,
-              path: `/${c.slug}/${specialtySlug}`,
-            }))}
-          />
+
           <FAQSection items={faqItems} />
         </div>
       </div>

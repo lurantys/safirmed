@@ -7,10 +7,7 @@ const OUT_DIR = path.resolve(__dirname, '../public');
 const SITE_URL = 'https://safirmed.vercel.app';
 
 const CITIES = [
-  'el-jadida', 'casablanca', 'rabat', 'marrakech', 'fes', 'tanger',
-  'agadir', 'meknes', 'oujda', 'kenitra', 'sale', 'mohammadia',
-  'tetouan', 'safi', 'beni-mellal', 'laayoune', 'nador', 'settat',
-  'khouribga', 'el-kelaa-des-sraghna',
+  'el-jadida',
 ];
 
 const SPECIALTIES = [
