@@ -1,5 +1,11 @@
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
+const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+const FREE_MODELS = [
+  'google/gemma-4-26b-a4b-it:free',
+  'deepseek/deepseek-v4-flash:free',
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+];
 
 const SPECIALTIES = [
   "Médecine Générale", "Dentaire", "Gynécologie – Obstétrique",
@@ -80,35 +86,56 @@ function extractSpecialty(content) {
   return null;
 }
 
-async function callGemini(symptoms) {
-  const res = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: `Symptômes : "${symptoms}"` }] }],
-      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-      generationConfig: { maxOutputTokens: 20, temperature: 0 },
-    }),
-  });
+async function tryModel(symptoms, model) {
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '',
+        'X-Title': 'SafirMed',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: `Symptômes : "${symptoms}"` },
+        ],
+        max_tokens: 50,
+        temperature: 0,
+      }),
+    });
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
+    if (res.ok) {
+      const data = await res.json();
+      return extractSpecialty(data?.choices?.[0]?.message?.content);
+    }
+
     if (res.status === 429) {
-      console.warn('[SymptomChat] Gemini rate-limited (429)');
+      console.warn(`[SymptomChat] ${model} rate-limited, next model`);
       return null;
     }
-    console.warn(`[SymptomChat] Gemini error ${res.status}:`, text.slice(0, 150));
+
+    const text = await res.text().catch(() => '');
+    console.warn(`[SymptomChat] ${model} error ${res.status}:`, text.slice(0, 100));
+    return null;
+  } catch (err) {
+    console.warn(`[SymptomChat] ${model} network error:`, err.message);
     return null;
   }
-
-  const data = await res.json();
-  return extractSpecialty(data?.candidates?.[0]?.content?.parts?.[0]?.text);
 }
 
 export async function matchSpecialtyWithAI(symptoms) {
-  if (!GEMINI_KEY) {
-    console.warn('[SymptomChat] VITE_GEMINI_API_KEY is not set');
+  if (!API_KEY) {
+    console.warn('[SymptomChat] VITE_OPENROUTER_API_KEY is not set');
     return null;
   }
-  return callGemini(symptoms);
+
+  for (const model of FREE_MODELS) {
+    const result = await tryModel(symptoms, model);
+    if (result) return result;
+  }
+
+  return null;
 }
