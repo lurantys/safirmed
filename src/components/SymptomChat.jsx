@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Markdown from 'react-markdown';
 import { MessageCircle, SendHorizonal, Stethoscope, ArrowLeft, Sparkles, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getSpecialtyDescription } from '@/utils/symptomMatcher';
+import { getSpecialtyDescription, matchSpecialty } from '@/utils/symptomMatcher';
 import { matchSpecialtyWithAI } from '@/utils/aiMatcher';
 import { DEFAULT_CITY } from "@/constants";
 
@@ -39,7 +39,10 @@ export default function SymptomChat({ onBack }) {
 
   const analyzeSymptoms = async (text) => {
     setLoading(true);
-    const specialty = await matchSpecialtyWithAI(text);
+    let specialty = await matchSpecialtyWithAI(text).catch(() => null);
+    if (!specialty) {
+      specialty = matchSpecialty(text);
+    }
     if (specialty) {
       const doctor = DOCTOR_TITLES[specialty] || `un spécialiste en ${specialty.toLowerCase()}`;
       addMessage('bot', `D'après vos symptômes, je vous recommande de consulter **${doctor}**.`, specialty);
