@@ -124,12 +124,12 @@ export async function matchSpecialtyWithAI(symptoms) {
   }
 
   const data = await fetchWithRetry({
-    model: 'openrouter/free',
+    model: 'deepseek/deepseek-v4-flash:free',
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: `Symptômes : "${symptoms}"` },
     ],
-    max_tokens: 30,
+    max_tokens: 50,
     temperature: 0,
   });
 
