@@ -1,6 +1,12 @@
 const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
+const FREE_MODELS = [
+  'google/gemma-4-26b-a4b-it:free',
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'deepseek/deepseek-v4-flash:free',
+];
+
 const SPECIALTIES = [
   "Médecine Générale", "Dentaire", "Gynécologie – Obstétrique",
   "Pédiatrie", "Cardiologie", "Ophtalmologie", "Dermatologie",
@@ -80,7 +86,7 @@ function extractSpecialty(content) {
   return null;
 }
 
-async function fetchWithRetry(body, retries = 6) {
+async function tryModel(symptoms, model, retries = 2) {
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(API_URL, {
@@ -90,27 +96,43 @@ async function fetchWithRetry(body, retries = 6) {
           'Content-Type': 'application/json',
           'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '',
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: `Symptômes : "${symptoms}"` },
+          ],
+          max_tokens: 50,
+          temperature: 0,
+        }),
       });
 
-      if (res.ok) return res.json();
+      if (res.ok) {
+        const data = await res.json();
+        const specialty = extractSpecialty(data?.choices?.[0]?.message?.content);
+        if (specialty) return specialty;
+      }
 
+      const status = res.status;
+      const text = await res.text().catch(() => '');
+      if (status === 429) {
+        console.warn(`[SymptomChat] ${model} rate-limited (429), trying next model`);
+        return null;
+      }
       if (i < retries - 1) {
-        console.warn(`[SymptomChat] error ${res.status}, retry ${i + 2}/${retries} in 3s`);
+        console.warn(`[SymptomChat] ${model} error ${status}, retry ${i + 2}/${retries} in 3s`);
         await new Promise(r => setTimeout(r, 3000));
         continue;
       }
-
-      const text = await res.text().catch(() => '');
-      console.warn(`[SymptomChat] error ${res.status}:`, text.slice(0, 200));
+      console.warn(`[SymptomChat] ${model} error ${status}:`, text.slice(0, 150));
       return null;
     } catch (err) {
       if (i < retries - 1) {
-        console.warn(`[SymptomChat] network error, retry ${i + 2}/${retries} in 3s`);
+        console.warn(`[SymptomChat] ${model} network error, retry ${i + 2}/${retries} in 3s`);
         await new Promise(r => setTimeout(r, 3000));
         continue;
       }
-      console.error('[SymptomChat] network error:', err);
+      console.warn(`[SymptomChat] ${model} network error:`, err.message);
       return null;
     }
   }
@@ -123,15 +145,10 @@ export async function matchSpecialtyWithAI(symptoms) {
     return null;
   }
 
-  const data = await fetchWithRetry({
-    model: 'deepseek/deepseek-v4-flash:free',
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: `Symptômes : "${symptoms}"` },
-    ],
-    max_tokens: 50,
-    temperature: 0,
-  });
+  for (const model of FREE_MODELS) {
+    const result = await tryModel(symptoms, model);
+    if (result) return result;
+  }
 
-  return extractSpecialty(data?.choices?.[0]?.message?.content);
+  return null;
 }
